@@ -5,7 +5,12 @@
 
 
 World_simulation::World_simulation()
-    : m_timekeeper(50, true)
+    : m_j3_remove_pending_objs_job(
+        std::make_unique<J3_remove_pending_objs_job>(*this, m_deletion_queue))
+    , m_j4_add_pending_objs_job(
+        std::make_unique<J4_add_pending_objs_job>(*this, m_insertion_queue))
+    , m_current_state(Job_source_state::WAIT_UNTIL_TIMEOUT)
+    , m_timekeeper(50, true)
 {
 }
 
@@ -48,10 +53,32 @@ int32_t World_simulation::J4_add_pending_objs_job::execute()
 // Job source callback.
 std::vector<Job_ifc*> World_simulation::fetch_next_jobs_callback()
 {
-    if (m_timekeeper.check_timeout_and_reset())
+    std::vector<Job_ifc*> jobs;
+
+    switch (m_current_state)
     {
-        // Start the next cycle right here!!!!!!
-        // @TODO: START HERE!!!!!
+        case Job_source_state::WAIT_UNTIL_TIMEOUT:
+            if (m_timekeeper.check_timeout_and_reset())
+            {
+                m_current_state = Job_source_state::EXECUTE_SIMULATION_TICKS;
+            }
+            break;
+
+        case Job_source_state::EXECUTE_SIMULATION_TICKS:
+
+            m_current_state = Job_source_state::REMOVE_PENDING_OBJS;
+            break;
+
+        case Job_source_state::REMOVE_PENDING_OBJS:
+
+            m_current_state = Job_source_state::ADD_PENDING_OBJS;
+            break;
+
+        case Job_source_state::ADD_PENDING_OBJS:
+
+            m_current_state = Job_source_state::WAIT_UNTIL_TIMEOUT;
+            break;
     }
-    return {};
+
+    return jobs;
 }

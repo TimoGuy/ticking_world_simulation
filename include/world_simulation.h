@@ -56,41 +56,54 @@ private:
         World_simulation& m_world_sim;
         pool_elem_key_t m_elem_key;
     };
+    std::vector<std::unique_ptr<J2_execute_simulation_tick_job>> m_j2_execute_simulation_tick_jobs;  // @TODO: START HERE!!!!! AND GET THE SIM TICK JOBS FILLED OUT!!!! MAYBE HAVE LIKE A POOL OF THESE?????
 
     class J3_remove_pending_objs_job : public Job_ifc
     {
     public:
-        J3_remove_pending_objs_job(Job_source& source, std::vector<pool_elem_key_t> keys)
+        J3_remove_pending_objs_job(
+            Job_source& source,
+            std::vector<pool_elem_key_t>& elem_keys_ref)
             : Job_ifc("World Simulation remove pending objs job", source)
-            , m_elem_keys(keys)
+            , m_elem_keys(elem_keys_ref)
         {
         }
 
         int32_t execute() override;
 
-    private:
-        std::vector<pool_elem_key_t> m_elem_keys;
+        std::vector<pool_elem_key_t>& m_elem_keys;
     };
+    std::unique_ptr<J3_remove_pending_objs_job> m_j3_remove_pending_objs_job;
 
     class J4_add_pending_objs_job : public Job_ifc
     {
     public:
-        J4_add_pending_objs_job(Job_source& source, std::vector<pool_elem_key_t> keys)
+        J4_add_pending_objs_job(
+            Job_source& source,
+            std::vector<std::unique_ptr<Simulating_entity_ifc>>& elems_ref)
             : Job_ifc("World Simulation add pending objs job", source)
-            , m_elem_keys(keys)
+            , m_elems(elems_ref)
         {
         }
 
         int32_t execute() override;
 
-    private:
-        std::vector<pool_elem_key_t> m_elem_keys;
+        std::vector<std::unique_ptr<Simulating_entity_ifc>>& m_elems;
     };
+    std::unique_ptr<J4_add_pending_objs_job> m_j4_add_pending_objs_job;
 
-    std::vector<Job_ifc*> fetch_next_jobs_callback() override;
-
-    // Next tick.
+    // States.
+    enum class Job_source_state : uint32_t
+    {
+        WAIT_UNTIL_TIMEOUT = 0,
+        EXECUTE_SIMULATION_TICKS,
+        REMOVE_PENDING_OBJS,
+        ADD_PENDING_OBJS,
+        NUM_STATES
+    };
+    std::atomic<Job_source_state> m_current_state;
     Job_timekeeper m_timekeeper;
+    std::vector<Job_ifc*> fetch_next_jobs_callback() override;
 
     // Insertion and deletion queues.
     std::vector<std::unique_ptr<Simulating_entity_ifc>> m_insertion_queue;
@@ -104,6 +117,7 @@ private:
         std::unique_ptr<Simulating_entity_ifc> data{ nullptr };
         std::atomic_uint32_t version_num{ (uint32_t)-1 };
     };
+
     Simulating_entity_ifc* get_sim_entity(pool_elem_key_t key)
     {
         uint32_t idx{ key & 0x00000000ffffffff };
@@ -118,5 +132,6 @@ private:
 
         return dwv.data.get();
     }
+
     std::array<Data_with_version, 4096> m_data_pool;
 };
