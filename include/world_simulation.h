@@ -25,20 +25,22 @@ private:
     //     4. Add pending addition objects.
     //     5. Idle until start of next tick.
     //     6. Jump to step 1.
-    class J1_calc_start_next_tick_job : public Job_ifc
-    {
-    public:
-        J1_calc_start_next_tick_job(Job_source& source, World_simulation& world_sim)
-            : Job_ifc("World Simulation calc next tick start time job", source)
-            , m_world_sim(world_sim)
-        {
-        }
 
-        int32_t execute() override;
+    // @TODO: DELETE ME!!!!!
+    // class J1_calc_start_next_tick_job : public Job_ifc
+    // {
+    // public:
+    //     J1_calc_start_next_tick_job(Job_source& source, World_simulation& world_sim)
+    //         : Job_ifc("World Simulation calc next tick start time job", source)
+    //         , m_world_sim(world_sim)
+    //     {
+    //     }
 
-    private:
-        World_simulation& m_world_sim;
-    };
+    //     int32_t execute() override;
+
+    // private:
+    //     World_simulation& m_world_sim;
+    // };
 
     class J2_execute_simulation_tick_job : public Job_ifc
     {

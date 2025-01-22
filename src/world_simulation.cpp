@@ -70,12 +70,12 @@ std::vector<Job_ifc*> World_simulation::fetch_next_jobs_callback()
             break;
 
         case Job_source_state::REMOVE_PENDING_OBJS:
-
+            jobs.emplace_back(m_j3_remove_pending_objs_job.get());
             m_current_state = Job_source_state::ADD_PENDING_OBJS;
             break;
 
         case Job_source_state::ADD_PENDING_OBJS:
-
+            jobs.emplace_back(m_j4_add_pending_objs_job.get());
             m_current_state = Job_source_state::WAIT_UNTIL_TIMEOUT;
             break;
     }
