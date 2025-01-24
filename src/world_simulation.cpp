@@ -46,6 +46,9 @@ int32_t World_simulation::J3_remove_pending_objs_job::execute()
         if (!result)
             std::cerr << "ERROR: Deleting key " << key << " failed." << std::endl;
     }
+    if (!m_world_sim.m_deletion_queue.empty())
+        m_world_sim.m_rebuild_entity_list = true;
+
     m_world_sim.m_deletion_queue.clear();
     return 0;
 }
@@ -64,6 +67,9 @@ int32_t World_simulation::J4_add_pending_objs_job::execute()
         if (!result)
             std::cerr << "ERROR: Inserting sim entity failed." << std::endl;
     }
+    if (!m_world_sim.m_insertion_queue.empty())
+        m_world_sim.m_rebuild_entity_list = true;
+
     m_world_sim.m_insertion_queue.clear();
     return 0;
 }
@@ -87,31 +93,45 @@ std::vector<Job_ifc*> World_simulation::fetch_next_jobs_callback()
         {
             std::lock_guard<std::mutex> lock{ m_data_pool_mutex };
             
-            // Expand tick jobs buffer with, don't contract.
-            if (m_active_data_pool_indices.size() > m_j2_execute_simulation_tick_jobs.size())
+            if (m_rebuild_entity_list)
             {
-                size_t num_new_jobs{
-                    m_active_data_pool_indices.size() - m_j2_execute_simulation_tick_jobs.size()
-                };
-                m_j2_execute_simulation_tick_jobs.reserve(m_active_data_pool_indices.size());
-                for (size_t _ = 0; _ < num_new_jobs; _++)
+                // Expand tick jobs buffer with, don't contract.
+                if (m_active_data_pool_indices.size() > m_j2_execute_simulation_tick_jobs.size())
                 {
-                    m_j2_execute_simulation_tick_jobs.emplace_back(
-                        std::make_unique<J2_execute_simulation_tick_job>(*this)
-                    );
+                    size_t num_new_jobs{
+                        m_active_data_pool_indices.size() - m_j2_execute_simulation_tick_jobs.size()
+                    };
+                    m_j2_execute_simulation_tick_jobs.reserve(m_active_data_pool_indices.size());
+                    for (size_t _ = 0; _ < num_new_jobs; _++)
+                    {
+                        m_j2_execute_simulation_tick_jobs.emplace_back(
+                            std::make_unique<J2_execute_simulation_tick_job>(*this)
+                        );
+                    }
                 }
-            }
 
-            // Fill in tick job indices and add to jobs.
-            size_t num_jobs{ m_active_data_pool_indices.size() };
-            jobs.reserve(num_jobs);
-            for (size_t i = 0; i < num_jobs; i++)
+                // Fill in tick job indices and add to jobs.
+                size_t num_jobs{ m_active_data_pool_indices.size() };
+                jobs.reserve(num_jobs);
+                for (size_t i = 0; i < num_jobs; i++)
+                {
+                    auto pool_idx{ m_active_data_pool_indices[i] };
+                    m_j2_execute_simulation_tick_jobs[i]->set_elem_key(
+                        get_sim_entity_key_from_index(pool_idx)
+                    );
+                    jobs.emplace_back(m_j2_execute_simulation_tick_jobs[i].get());
+                }
+
+                m_rebuild_entity_list = false;
+            }
+            else
             {
-                auto pool_idx{ m_active_data_pool_indices[i] };
-                m_j2_execute_simulation_tick_jobs[i]->set_elem_key(
-                    get_sim_entity_key_from_index(pool_idx)
-                );
-                jobs.emplace_back(m_j2_execute_simulation_tick_jobs[i].get());
+                // Return currently built job list.
+                jobs.reserve(m_j2_execute_simulation_tick_jobs.size());
+                for (auto& job_uptr_ref : m_j2_execute_simulation_tick_jobs)
+                {
+                    jobs.emplace_back(job_uptr_ref.get());
+                }
             }
 
             m_current_state = Job_source_state::REMOVE_PENDING_OBJS;

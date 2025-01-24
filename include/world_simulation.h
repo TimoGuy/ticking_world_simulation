@@ -114,6 +114,7 @@ private:
     };
     std::atomic<Job_source_state> m_current_state;
     Job_timekeeper m_timekeeper;
+    std::atomic_bool m_rebuild_entity_list;
     std::vector<Job_ifc*> fetch_next_jobs_callback() override;
 
     // Insertion and deletion queues.
