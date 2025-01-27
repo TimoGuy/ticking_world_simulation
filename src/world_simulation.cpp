@@ -76,13 +76,15 @@ int32_t World_simulation::J4_add_pending_objs_job::execute()
 
 
 // Job source callback.
-std::vector<Job_ifc*> World_simulation::fetch_next_jobs_callback()
+Job_source::Job_next_jobs_return_data World_simulation::fetch_next_jobs_callback()
 {
-    std::vector<Job_ifc*> jobs;
+    Job_next_jobs_return_data return_data;
 
     switch (m_current_state)
     {
         case Job_source_state::WAIT_UNTIL_TIMEOUT:
+            //if ()  @TODO: add stop doing stuff condition here.
+            // else
             if (m_timekeeper.check_timeout_and_reset())
             {
                 m_current_state = Job_source_state::EXECUTE_SIMULATION_TICKS;
@@ -112,14 +114,14 @@ std::vector<Job_ifc*> World_simulation::fetch_next_jobs_callback()
 
                 // Fill in tick job indices and add to jobs.
                 size_t num_jobs{ m_active_data_pool_indices.size() };
-                jobs.reserve(num_jobs);
+                return_data.jobs.reserve(num_jobs);
                 for (size_t i = 0; i < num_jobs; i++)
                 {
                     auto pool_idx{ m_active_data_pool_indices[i] };
                     m_j2_execute_simulation_tick_jobs[i]->set_elem_key(
                         get_sim_entity_key_from_index(pool_idx)
                     );
-                    jobs.emplace_back(m_j2_execute_simulation_tick_jobs[i].get());
+                    return_data.jobs.emplace_back(m_j2_execute_simulation_tick_jobs[i].get());
                 }
 
                 m_rebuild_entity_list = false;
@@ -127,10 +129,10 @@ std::vector<Job_ifc*> World_simulation::fetch_next_jobs_callback()
             else
             {
                 // Return currently built job list.
-                jobs.reserve(m_j2_execute_simulation_tick_jobs.size());
+                return_data.jobs.reserve(m_j2_execute_simulation_tick_jobs.size());
                 for (auto& job_uptr_ref : m_j2_execute_simulation_tick_jobs)
                 {
-                    jobs.emplace_back(job_uptr_ref.get());
+                    return_data.jobs.emplace_back(job_uptr_ref.get());
                 }
             }
 
@@ -139,15 +141,15 @@ std::vector<Job_ifc*> World_simulation::fetch_next_jobs_callback()
         break;
 
         case Job_source_state::REMOVE_PENDING_OBJS:
-            jobs.emplace_back(m_j3_remove_pending_objs_job.get());
+            return_data.jobs.emplace_back(m_j3_remove_pending_objs_job.get());
             m_current_state = Job_source_state::ADD_PENDING_OBJS;
             break;
 
         case Job_source_state::ADD_PENDING_OBJS:
-            jobs.emplace_back(m_j4_add_pending_objs_job.get());
+            return_data.jobs.emplace_back(m_j4_add_pending_objs_job.get());
             m_current_state = Job_source_state::WAIT_UNTIL_TIMEOUT;
             break;
     }
 
-    return jobs;
+    return return_data;
 }
