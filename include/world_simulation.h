@@ -7,40 +7,49 @@
 #include <vector>
 #include "multithreaded_job_system_public.h"
 #include "simulating_entity_ifc.h"
+namespace JPH { class PhysicsSystem; }
 
+
+constexpr uint32_t k_world_sim_hz{ 40 };
+constexpr float_t k_world_sim_delta_time{ 1.0f / k_world_sim_hz };
 
 class World_simulation : public Job_source
 {
 public:
-    World_simulation();
+    World_simulation(uint32_t num_threads);
 
     void add_sim_entity_to_world(std::unique_ptr<Simulating_entity_ifc>&& entity);
     void remove_entity_from_world(pool_elem_key_t entity_key);
 
 private:
     // Job cycle:
-    //     1. Calculate start of next tick.
-    //     2. Execute simulation ticks (multiple jobs per available object).
-    //     3. Remove pending delete objects.
-    //     4. Add pending addition objects.
-    //     5. Idle until start of next tick.
-    //     6. Jump to step 1.
+    // - Setup.
+    //   - Create Jolt Physics World.
+    // - Main cycle.
+    //   - Use timekeeper to find when next tick starts.
+    //   - Execute simulation ticks (multiple jobs per available object).
+    //   - Remove pending delete objects.
+    //   - Add pending addition objects.
+    //   - Check if should shut down.
+    //   - Repeat.
 
-    // @TODO: DELETE ME!!!!!
-    // class J1_calc_start_next_tick_job : public Job_ifc
-    // {
-    // public:
-    //     J1_calc_start_next_tick_job(Job_source& source, World_simulation& world_sim)
-    //         : Job_ifc("World Simulation calc next tick start time job", source)
-    //         , m_world_sim(world_sim)
-    //     {
-    //     }
+    class S1_create_jolt_physics_world : public Job_ifc
+    {
+    public:
+        S1_create_jolt_physics_world(World_simulation& world_sim, uint32_t num_threads)
+            : Job_ifc("World Simulation setup jolt physics job", world_sim)
+            , m_world_sim(world_sim)
+            , m_num_threads(num_threads)
+        {
+        }
 
-    //     int32_t execute() override;
+        int32_t execute() override;
 
-    // private:
-    //     World_simulation& m_world_sim;
-    // };
+    private:
+        World_simulation& m_world_sim;
+        uint32_t m_num_threads;
+    };
+    std::unique_ptr<S1_create_jolt_physics_world> m_s1_create_jolt_physics_world;
 
     class J2_execute_simulation_tick_job : public Job_ifc
     {
@@ -106,10 +115,16 @@ private:
     // States.
     enum class Job_source_state : uint32_t
     {
-        WAIT_UNTIL_TIMEOUT = 0,
+        // Setup.
+        SETUP_PHYSICS_WORLD = 0,
+
+        // Main cycle.
+        WAIT_UNTIL_TIMEOUT,
         EXECUTE_SIMULATION_TICKS,
         REMOVE_PENDING_OBJS,
         ADD_PENDING_OBJS,
+        CHECK_FOR_SHUTDOWN_REQUEST,
+
         NUM_STATES
     };
     std::atomic<Job_source_state> m_current_state;
@@ -202,4 +217,7 @@ private:
     std::array<Data_with_version, 4096> m_data_pool;
     std::vector<uint32_t> m_active_data_pool_indices;
     std::mutex m_data_pool_mutex;
+
+    // Physics system.
+    std::unique_ptr<JPH::PhysicsSystem> m_physics_system;
 };

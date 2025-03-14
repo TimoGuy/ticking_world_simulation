@@ -5,13 +5,15 @@
 #include "simulating_entity_ifc.h"
 
 
-World_simulation::World_simulation()
-    : m_j3_remove_pending_objs_job(
+World_simulation::World_simulation(uint32_t num_threads)
+    : m_s1_create_jolt_physics_world(
+        std::make_unique<S1_create_jolt_physics_world>(*this, num_threads))
+    , m_j3_remove_pending_objs_job(
         std::make_unique<J3_remove_pending_objs_job>(*this, m_deletion_queue))
     , m_j4_add_pending_objs_job(
         std::make_unique<J4_add_pending_objs_job>(*this, m_insertion_queue))
-    , m_current_state(Job_source_state::WAIT_UNTIL_TIMEOUT)
-    , m_timekeeper(50, true)
+    , m_current_state(Job_source_state::SETUP_PHYSICS_WORLD)
+    , m_timekeeper(k_world_sim_hz, true)
 {
 }
 
@@ -82,6 +84,10 @@ Job_source::Job_next_jobs_return_data World_simulation::fetch_next_jobs_callback
 
     switch (m_current_state)
     {
+        case Job_source_state::SETUP_PHYSICS_WORLD:
+            return_data.jobs.emplace_back(m_s1_create_jolt_physics_world.get());
+            break;
+
         case Job_source_state::WAIT_UNTIL_TIMEOUT:
             //if ()  @TODO: add stop doing stuff condition here.
             // else
@@ -97,7 +103,7 @@ Job_source::Job_next_jobs_return_data World_simulation::fetch_next_jobs_callback
             
             if (m_rebuild_entity_list)
             {
-                // Expand tick jobs buffer with, don't contract.
+                // Expand tick jobs buffer with empty tick jobs, don't contract.
                 if (m_active_data_pool_indices.size() > m_j2_execute_simulation_tick_jobs.size())
                 {
                     size_t num_new_jobs{
