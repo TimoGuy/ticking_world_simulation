@@ -31,6 +31,8 @@ add_library(${PROJECT_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/src/jolt_phys_impl__layers.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/jolt_phys_impl__obj_vs_broad_phase_filter.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/jolt_physics_headers.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/physics_objects.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/physics_objects.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/world_simulation__create_jolt_physics_world.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/world_simulation.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/include/world_simulation.h
