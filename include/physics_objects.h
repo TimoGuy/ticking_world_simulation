@@ -15,126 +15,72 @@
 namespace phys_obj
 {
 
+// References.
+void set_body_interface(void* body_interface);
+
 // Shapes.
-using Shape_ref_const = JPH::RefConst<JPH::Shape>;
-
-class Shape_ifc
+enum Shape_type : uint32_t
 {
-public:
-    virtual ~Shape_ifc()
-    {
-        // Check that the shape handle was deleted.
-        assert(m_internal_shape_handle == nullptr);
-    }
-
-    virtual bool construct_shape() = 0;
-    virtual bool destroy_shape() = 0;
-
-    Shape_ref_const& get_shape()
-    {
-        return m_internal_shape_handle;
-    }
-
-protected:
-    // @NOTE: Use this to store the pointer to the
-    //   created shape.
-    Shape_ref_const m_internal_shape_handle{ nullptr };
+    SHAPE_TYPE_BOX = 0,
+    SHAPE_TYPE_SPHERE,
+    SHAPE_TYPE_CAPSULE,
+    SHAPE_TYPE_TAPERED_CAPSULE,
+    SHAPE_TYPE_CYLINDER,
+    SHAPE_TYPE_TAPERED_CYLINDER,
+    NUM_SHAPE_TYPES
 };
 
-class Shape_box : public Shape_ifc
+struct Shape_params_box
 {
-public:
-    Shape_box(JPH::Vec3Arg half_extents);
-
-    bool construct_shape() override;
-    bool destroy_shape() override;
-
-private:
-    JPH::Vec3 m_half_extents;
+    float_t half_x;
+    float_t half_y;
+    float_t half_z;
 };
 
-class Shape_capsule : public Shape_ifc
+struct Shape_params_sphere
 {
-public:
-    Shape_capsule(float_t radius, float_t capsule_half_height);
-
-    bool construct_shape() override;
-    bool destroy_shape() override;
-
-private:
-    float_t m_radius;
-    float_t m_capsule_half_height;
+    float_t radius;
 };
 
-class Shape_cylinder : public Shape_ifc
+struct Shape_params_capsule
 {
-public:
-    Shape_cylinder(float_t radius, float_t half_height);
-
-    bool construct_shape() override;
-    bool destroy_shape() override;
-
-private:
-    float_t m_radius;
-    float_t m_half_height;
+    float_t radius;
+    float_t half_height;
 };
 
-class Shape_sphere : public Shape_ifc
+struct Shape_params_tapered_capsule
 {
-public:
-    Shape_sphere(float_t radius);
-
-    bool construct_shape() override;
-    bool destroy_shape() override;
-
-private:
-    float_t m_radius;
+    float_t top_radius;
+    float_t bottom_radius;
+    float_t half_height;
 };
 
-class Shape_tapered_capsule : public Shape_ifc
-{
-public:
-    Shape_tapered_capsule(float_t top_radius, float_t bottom_radius, float_t half_height);
+using Shape_params_cylinder = Shape_params_capsule;
+using Shape_params_tapered_cylinder = Shape_params_tapered_capsule;
 
-    bool construct_shape() override;
-    bool destroy_shape() override;
+using Shape_params_ptr = void*;
 
-private:
-    float_t m_top_radius;
-    float_t m_bottom_radius;
-    float_t m_half_height;
-};
-
-class Shape_tapered_cylinder : public Shape_ifc
-{
-public:
-    Shape_tapered_cylinder(float_t top_radius, float_t bottom_radius, float_t half_height);
-
-    bool construct_shape() override;
-    bool destroy_shape() override;
-
-private:
-    float_t m_top_radius;
-    float_t m_bottom_radius;
-    float_t m_half_height;
-};
+using Shape_const_reference = JPH::RefConst<JPH::Shape>;
 
 
 // Actors.
-struct Shape_w_transform_offset
+struct Shape_w_transform
 {
-    std::unique_ptr<Shape_ifc> shape;
-    JPH::Vec3 offset;
-    JPH::Quat rotation;
+    Shape_type shape_type;
+    Shape_params_ptr shape_params;
+    JPH::Vec3 local_position;
+    JPH::Quat local_rotation;
 };
 
 class Actor_kinematic
 {
 public:
-    Actor_kinematic(std::vector<Shape_w_transform_offset>&& shapes);
+    Actor_kinematic(JPH::RVec3 position,
+                    JPH::Quat rotation,
+                    std::vector<Shape_w_transform>&& shape_params);
 
 private:
-    std::vector<Shape_w_transform_offset> m_shapes;
+    Shape_const_reference m_shape;
 };
 
 enum Actor_char_ctrller_type_e : uint32_t
@@ -150,11 +96,13 @@ enum Actor_char_ctrller_type_e : uint32_t
 class Actor_character_controller
 {
 public:
-    Actor_character_controller(Actor_char_ctrller_type_e type_flags, Shape_cylinder&& shape);
+    Actor_character_controller(JPH::RVec3 position,
+                               Actor_char_ctrller_type_e type_flags,
+                               Shape_params_cylinder&& cylinder_params);
 
 private:
     Actor_char_ctrller_type_e m_type;
-    Shape_cylinder m_shape;
+    Shape_const_reference m_shape;
 };
 
 
@@ -164,7 +112,7 @@ private:
 class Trigger_kinematic
 {
 public:
-    Trigger_kinematic(Actor_char_ctrller_type_e sensing_type_flags, Shape_box&& volume);
+    Trigger_kinematic(Actor_char_ctrller_type_e sensing_type_flags, Shape_params_box&& volume_params);
 
     void set_sensing_type_flags(Actor_char_ctrller_type_e sensing_type_flags);
 
@@ -177,7 +125,7 @@ public:
 
 private:
     Actor_char_ctrller_type_e m_sensing_type_flags;
-    Shape_box m_trigger_volume;
+    Shape_const_reference m_trigger_volume;
     bool m_is_triggered;
     std::vector<Actor_character_controller*> m_overlapping_actors;
 };
