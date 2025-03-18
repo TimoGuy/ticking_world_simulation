@@ -17,7 +17,6 @@
 #include "jolt_phys_impl__custom_listeners.h"
 
 
-
 namespace
 {
 
@@ -39,6 +38,7 @@ static My_body_activation_listener s_body_activation_listener;
 static My_contact_listener s_contact_listener;
 
 }  // namespace
+
 
 // Jobs.
 int32_t World_simulation::S1_create_jolt_physics_world::execute()

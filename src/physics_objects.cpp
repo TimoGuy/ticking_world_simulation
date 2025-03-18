@@ -1,5 +1,6 @@
 #include "physics_objects.h"
 
+#include "cglm/cglm.h"
 #include "jolt_physics_headers.h"
 #include "jolt_phys_impl__layers.h"
 
@@ -7,6 +8,7 @@
 namespace phys_obj
 {
 
+static JPH::PhysicsSystem* s_physics_system{ nullptr };
 static JPH::BodyInterface* s_body_interface_ptr{ nullptr };
 
 Shape_const_reference create_shape(Shape_type shape_type,
@@ -16,8 +18,9 @@ Shape_const_reference create_shape(Shape_type shape_type,
 
 
 // References.
-void phys_obj::set_body_interface(void* body_interface)
+void phys_obj::set_references(void* physics_system, void* body_interface)
 {
+    s_physics_system = reinterpret_cast<JPH::PhysicsSystem*>(physics_system);
     s_body_interface_ptr = reinterpret_cast<JPH::BodyInterface*>(body_interface);
 }
 
@@ -44,6 +47,10 @@ phys_obj::Actor_kinematic::Actor_kinematic(JPH::RVec3 position,
     if (shapes.size() == 1)
     {
         // Single shape.
+        // @NOTE: For debug just make sure that the transform is identity.
+        //   FYI: Normally the 
+        assert(shape_params[0].local_position.IsNearZero());
+        assert(shape_params[0].local_rotation.IsClose(JPH::Quat::sIdentity()));
         m_shape = shapes[0];
     }
     else
@@ -62,13 +69,47 @@ phys_obj::Actor_kinematic::Actor_kinematic(JPH::RVec3 position,
 
     // Create kinematic body.
     assert(s_body_interface_ptr != nullptr);
-    s_body_interface_ptr->CreateAndAddBody(
-        JPH::BodyCreationSettings(m_shape,
-                                  position,
-                                  rotation,
-                                  JPH::EMotionType::Kinematic,
-                                  Layers::MOVING),
-        JPH::EActivation::Activate);
+    m_body_id =
+        s_body_interface_ptr->CreateAndAddBody(
+            JPH::BodyCreationSettings(m_shape,
+                                      position,
+                                      rotation,
+                                      JPH::EMotionType::Kinematic,
+                                      Layers::MOVING),
+            JPH::EActivation::Activate);
+}
+
+phys_obj::Actor_character_controller::Actor_character_controller(
+    JPH::RVec3 position,
+    Actor_char_ctrller_type_e type_flags,
+    Shape_params_cylinder&& cylinder_params)
+    : m_type(type_flags)
+{
+    m_shape = create_shape(Shape_type::SHAPE_TYPE_CYLINDER,
+                           &cylinder_params);
+
+    // Create character controller for collide-and-slide method.
+    JPH::Ref<JPH::CharacterSettings> settings{ new JPH::CharacterSettings };
+    settings->mMaxSlopeAngle = glm_rad(46.0f);
+    settings->mLayer = Layers::MOVING;
+    settings->mShape = m_shape;
+    settings->mGravityFactor = 0.0f;
+    settings->mFriction = 0.0f;
+    settings->mSupportingVolume =
+        JPH::Plane(JPH::Vec3::sAxisY(),
+                   -(cylinder_params.half_height +
+                       (1.0f - std::sinf(settings->mMaxSlopeAngle))));
+
+    m_character_controller =
+        new JPH::Character(settings,
+                           position,
+                           JPH::Quat::sIdentity(),
+                           0,
+                           s_physics_system);
+    s_body_interface_ptr->SetMotionQuality(m_character_controller->GetBodyID(),
+                                           JPH::EMotionQuality::Discrete);
+
+    m_character_controller->AddToPhysicsSystem(JPH::EActivation::Activate);
 }
 
 
@@ -76,6 +117,7 @@ phys_obj::Actor_kinematic::Actor_kinematic(JPH::RVec3 position,
 phys_obj::Shape_const_reference phys_obj::create_shape(Shape_type shape_type,
                                                        Shape_params_ptr shape_params)
 {
+    assert(shape_params != nullptr);
     Shape_const_reference shape{ nullptr };
 
     switch (shape_type)

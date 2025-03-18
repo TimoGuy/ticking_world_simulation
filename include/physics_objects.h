@@ -9,6 +9,7 @@
 #include "Jolt/Core/Reference.h"
 #include "Jolt/Math/Quat.h"
 #include "Jolt/Math/Vec3.h"
+#include "Jolt/Physics/Character/Character.h"
 #include "Jolt/Physics/Collision/Shape/Shape.h"
 
 
@@ -16,7 +17,7 @@ namespace phys_obj
 {
 
 // References.
-void set_body_interface(void* body_interface);
+void set_references(void* physics_system, void* body_interface);
 
 // Shapes.
 enum Shape_type : uint32_t
@@ -67,9 +68,9 @@ using Shape_const_reference = JPH::RefConst<JPH::Shape>;
 struct Shape_w_transform
 {
     Shape_type shape_type;
-    Shape_params_ptr shape_params;
-    JPH::Vec3 local_position;
-    JPH::Quat local_rotation;
+    Shape_params_ptr shape_params{ nullptr };
+    JPH::Vec3 local_position{ JPH::Vec3::sZero() };
+    JPH::Quat local_rotation{ JPH::Quat::sIdentity() };
 };
 
 class Actor_kinematic
@@ -81,6 +82,7 @@ public:
 
 private:
     Shape_const_reference m_shape;
+    JPH::BodyID m_body_id;
 };
 
 enum Actor_char_ctrller_type_e : uint32_t
@@ -103,6 +105,7 @@ public:
 private:
     Actor_char_ctrller_type_e m_type;
     Shape_const_reference m_shape;
+    JPH::Ref<JPH::Character> m_character_controller;
 };
 
 
