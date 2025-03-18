@@ -44,6 +44,7 @@ target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/third_party/jolt_physics
+        ${cglm_INCLUDE_DIR}
         ${multithreaded_job_system_INCLUDE_DIR}
 )
 

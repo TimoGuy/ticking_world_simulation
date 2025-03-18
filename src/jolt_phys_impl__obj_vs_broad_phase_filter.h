@@ -13,12 +13,12 @@ public:
         {
         case Layers::NON_MOVING:
             return
-                in_layer2 == BroadPhaseLayers::MOVING &&
-                in_layer2 != BroadPhaseLayers::HIT_HURT_BOX;
+                in_layer2 == Broad_phase_layers::MOVING &&
+                in_layer2 != Broad_phase_layers::HIT_HURT_BOX;
         case Layers::MOVING:
             return
                 true &&
-                in_layer2 != BroadPhaseLayers::HIT_HURT_BOX;
+                in_layer2 != Broad_phase_layers::HIT_HURT_BOX;
         case Layers::HIT_HURT_BOX:
             return false;
         default:

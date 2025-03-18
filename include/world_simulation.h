@@ -5,9 +5,10 @@
 #include <memory>
 #include <mutex>
 #include <vector>
+#include "Jolt/Jolt.h"
+#include "Jolt/Physics/PhysicsSystem.h"
 #include "multithreaded_job_system_public.h"
 #include "simulating_entity_ifc.h"
-namespace JPH { class PhysicsSystem; }
 
 
 constexpr uint32_t k_world_sim_hz{ 40 };

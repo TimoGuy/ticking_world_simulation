@@ -38,7 +38,7 @@ public:
     virtual JobHandle CreateJob(const char *in_name, JPH::ColorArg in_color, const JobFunction &in_job_function, uint32_t in_num_dependencies = 0) override;
 
     /// Change the max concurrency after initialization
-    void set_num_threads_usage(int in_num_threads) { /*StopThreads(); StartThreads(in_num_threads);*/ }
+    void set_num_threads_usage(int in_num_threads);
     
 protected:
     // See JobSystem

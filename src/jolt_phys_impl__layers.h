@@ -86,9 +86,9 @@ public:
     {
         switch ((JPH::BroadPhaseLayer::Type)inLayer)
         {
-        case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::NON_MOVING:	return "NON_MOVING";
-        case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::MOVING:		return "MOVING";
-        case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::HIT_HURT_BOX: return "HIT_HURT_BOX";
+        case (JPH::BroadPhaseLayer::Type)Broad_phase_layers::NON_MOVING:	return "NON_MOVING";
+        case (JPH::BroadPhaseLayer::Type)Broad_phase_layers::MOVING:		return "MOVING";
+        case (JPH::BroadPhaseLayer::Type)Broad_phase_layers::HIT_HURT_BOX: return "HIT_HURT_BOX";
         default:													JPH_ASSERT(false); return "INVALID";
         }
     }

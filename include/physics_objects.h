@@ -135,6 +135,8 @@ private:
 
 
 // Hitboxes.
+class Hurtbox_ifc;  // Forward decl.
+
 enum Hurtbox_type_e : uint32_t
 {
     HURTBOX_TYPE_METAL_BLADE = 0,
