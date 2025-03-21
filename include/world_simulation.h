@@ -121,11 +121,14 @@ private:
 
         // Main cycle.
         WAIT_UNTIL_TIMEOUT,
-        EXECUTE_INPUT_THEN_LOGIC_THEN_ANIMATOR,
-        UPDATE_PHYSICS_OBJS,
+
+        EXECUTE_LOGIC_UPDATE,
+        UPDATE_PHYSICS_INPUTS,
         STEP_PHYSICS_WORLD,
+
         REMOVE_PENDING_SIM_OBJS,
         ADD_PENDING_SIM_OBJS,
+        // PACK_JOB_GROUPS  @TODO: Could have some kind of grouping for all the different component types for memory contiguousness.
         CHECK_FOR_SHUTDOWN_REQUEST,
 
         NUM_STATES
@@ -142,6 +145,21 @@ private:
     std::mutex m_deletion_queue_mutex;
 
     // Data pool.
+    void pool_elem_key_extract_data(pool_elem_key_t key,
+                                    uint32_t& out_idx,
+                                    uint32_t& out_version_num)
+    {
+        out_idx         = static_cast<uint32_t>(key & 0x00000000ffffffff);
+        out_version_num = static_cast<uint32_t>((key & 0xffffffff00000000) >> 32);
+    }
+
+    pool_elem_key_t create_pool_elem_key(uint32_t idx, uint32_t version_num)
+    {
+        return static_cast<pool_elem_key_t>(
+            static_cast<uint64_t>(idx) |
+            static_cast<uint64_t>(version_num) << 32);
+    }
+
     struct Data_with_version
     {
         std::unique_ptr<Simulating_entity_ifc> data{ nullptr };
@@ -150,8 +168,8 @@ private:
 
     Simulating_entity_ifc* get_sim_entity(pool_elem_key_t key)
     {
-        uint32_t idx{ key & 0x00000000ffffffff };
-        uint32_t version_num{ (key & 0xffffffff00000000) >> 32 };
+        uint32_t idx, version_num;
+        pool_elem_key_extract_data(key, idx, version_num);
         
         if (idx >= m_data_pool.size())
             return nullptr;
@@ -167,17 +185,13 @@ private:
 
     pool_elem_key_t get_sim_entity_key_from_index(uint32_t idx)
     {
-        pool_elem_key_t key{
-            static_cast<uint64_t>(idx) |
-            static_cast<uint64_t>(m_data_pool[idx].version_num.load()) << 32
-        };
-        return key;
+        return create_pool_elem_key(idx, m_data_pool[idx].version_num.load());
     }
 
     bool delete_sim_entity(pool_elem_key_t key)
     {
-        uint32_t idx{ key & 0x00000000ffffffff };
-        uint32_t version_num{ (key & 0xffffffff00000000) >> 32 };
+        uint32_t idx, version_num;
+        pool_elem_key_extract_data(key, idx, version_num);
         
         if (idx >= m_data_pool.size())
             return false;
