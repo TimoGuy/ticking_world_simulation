@@ -122,9 +122,8 @@ private:
         // Main cycle.
         WAIT_UNTIL_TIMEOUT,
 
-        EXECUTE_LOGIC_UPDATE,
-        UPDATE_PHYSICS_INPUTS,
-        STEP_PHYSICS_WORLD,
+        EXECUTE_LOGIC_UPDATE,  // Read input, logic step, calc skeletal anim bone matrices, write physics inputs, etc.
+        STEP_PHYSICS_WORLD,    // Run physics world update procedure.
 
         REMOVE_PENDING_SIM_OBJS,
         ADD_PENDING_SIM_OBJS,
