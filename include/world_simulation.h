@@ -63,6 +63,7 @@ private:
 
         void set_elem_key(pool_elem_key_t new_key)
         {
+            static_assert(false);  // @TODO: START HERE Set back up the new behavior-driven simulation system.
             m_elem_key = new_key;
         }
 
@@ -77,38 +78,30 @@ private:
     class J3_remove_pending_objs_job : public Job_ifc
     {
     public:
-        J3_remove_pending_objs_job(
-            World_simulation& world_sim,
-            std::vector<pool_elem_key_t>& elem_keys_ref)
+        J3_remove_pending_objs_job(World_simulation& world_sim)
             : Job_ifc("World Simulation remove pending objs job", world_sim)
             , m_world_sim(world_sim)
-            , m_elem_keys(elem_keys_ref)
         {
         }
 
         int32_t execute() override;
 
         World_simulation& m_world_sim;
-        std::vector<pool_elem_key_t>& m_elem_keys;  // @TODO: remove or refactor.
     };
     std::unique_ptr<J3_remove_pending_objs_job> m_j3_remove_pending_objs_job;
 
     class J4_add_pending_objs_job : public Job_ifc
     {
     public:
-        J4_add_pending_objs_job(
-            World_simulation& world_sim,
-            std::vector<std::unique_ptr<Simulating_entity_ifc>>& elems_ref)
+        J4_add_pending_objs_job(World_simulation& world_sim)
             : Job_ifc("World Simulation add pending objs job", world_sim)
             , m_world_sim(world_sim)
-            , m_elems(elems_ref)
         {
         }
 
         int32_t execute() override;
 
         World_simulation& m_world_sim;
-        std::vector<std::unique_ptr<Simulating_entity_ifc>>& m_elems;  // @TODO: remove or refactor.
     };
     std::unique_ptr<J4_add_pending_objs_job> m_j4_add_pending_objs_job;
 

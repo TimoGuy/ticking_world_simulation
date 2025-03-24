@@ -9,9 +9,9 @@ World_simulation::World_simulation(uint32_t num_threads)
     : m_s1_create_jolt_physics_world(
         std::make_unique<S1_create_jolt_physics_world>(*this, num_threads))
     , m_j3_remove_pending_objs_job(
-        std::make_unique<J3_remove_pending_objs_job>(*this, m_deletion_queue))
+        std::make_unique<J3_remove_pending_objs_job>(*this))
     , m_j4_add_pending_objs_job(
-        std::make_unique<J4_add_pending_objs_job>(*this, m_insertion_queue))
+        std::make_unique<J4_add_pending_objs_job>(*this))
     , m_current_state(Job_source_state::SETUP_PHYSICS_WORLD)
     , m_timekeeper(k_world_sim_hz, true)
     , m_entity_pool(k_num_max_entities, nullptr)
