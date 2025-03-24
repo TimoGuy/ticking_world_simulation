@@ -5,12 +5,7 @@
 #include <memory>
 #include <utility>  // std::pair
 #include <vector>
-#include "Jolt/Jolt.h"
-#include "Jolt/Core/Reference.h"
-#include "Jolt/Math/Quat.h"
-#include "Jolt/Math/Vec3.h"
-#include "Jolt/Physics/Character/Character.h"
-#include "Jolt/Physics/Collision/Shape/Shape.h"
+#include "jolt_physics_headers.h"
 
 
 namespace phys_obj

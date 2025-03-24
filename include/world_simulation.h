@@ -5,10 +5,9 @@
 #include <memory>
 #include <mutex>
 #include <vector>
-#include "Jolt/Jolt.h"
-#include "Jolt/Physics/PhysicsSystem.h"
+#include "jolt_physics_headers.h"
 #include "multithreaded_job_system_public.h"
-#include "simulating_entity_ifc.h"
+#include "simulating_ifc.h"
 
 
 constexpr uint32_t k_world_sim_hz{ 50 };
@@ -143,6 +142,7 @@ private:
     std::vector<pool_elem_key_t> m_deletion_queue;
     std::mutex m_deletion_queue_mutex;
 
+#if 0
     // Data pool.
     void pool_elem_key_extract_data(pool_elem_key_t key,
                                     uint32_t& out_idx,
@@ -233,6 +233,8 @@ private:
     std::array<Data_with_version, 4096> m_data_pool;
     std::vector<uint32_t> m_active_data_pool_indices;
     std::mutex m_data_pool_mutex;
+#endif  // 0
+
 
     // Physics system.
     std::unique_ptr<JPH::PhysicsSystem> m_physics_system;
