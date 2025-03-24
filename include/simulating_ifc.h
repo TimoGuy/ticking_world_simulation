@@ -18,7 +18,7 @@ class Entity_ifc
 {
 public:
     // World simulation events.
-    virtual void on_create(pool::elem_key_t key) = 0;
+    virtual void on_create(size_t creation_idx) = 0;
     virtual void on_teardown() = 0;
 };
 
@@ -32,7 +32,7 @@ enum Behavior_order : uint32_t
     NUM_SIM_BEHAVIOR_TYPES
 };
 
-constexpr uint32_t k_num_max_behavior_data_blocks{ 1024 };
+constexpr uint32_t k_num_max_behavior_data_blocks{ 4096 };
 
 // Behavior interface: components of entities.
 class Behavior_ifc

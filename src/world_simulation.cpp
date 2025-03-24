@@ -2,7 +2,7 @@
 
 #include <chrono>
 #include <iostream>
-#include "simulating_entity_ifc.h"
+#include "simulating_ifc.h"
 
 
 World_simulation::World_simulation(uint32_t num_threads)
@@ -14,19 +14,20 @@ World_simulation::World_simulation(uint32_t num_threads)
         std::make_unique<J4_add_pending_objs_job>(*this, m_insertion_queue))
     , m_current_state(Job_source_state::SETUP_PHYSICS_WORLD)
     , m_timekeeper(k_world_sim_hz, true)
+    , m_entity_pool(k_num_max_entities, nullptr)
 {
 }
 
-void World_simulation::add_sim_entity_to_world(std::unique_ptr<Simulating_entity_ifc>&& entity)
+void World_simulation::add_sim_entity_to_world(std::unique_ptr<simulating::Entity_ifc>&& entity)
 {
     std::lock_guard<std::mutex> lock{ m_insertion_queue_mutex };
     m_insertion_queue.emplace_back(std::move(entity));
 }
 
-void World_simulation::remove_entity_from_world(pool_elem_key_t entity_key)
+void World_simulation::remove_entity_from_world(size_t entity_idx)
 {
-    std::lock_guard<std::mutex> lock{ m_deletion_queue_mutex };
-    m_deletion_queue.emplace_back(entity_key);
+    std::lock_guard<std::mutex> lock{ m_deletion_indices_queue_mutex };
+    m_deletion_indices_queue.emplace_back(entity_idx);
 }
 
 // Jobs.
@@ -38,39 +39,49 @@ int32_t World_simulation::J2_execute_simulation_tick_job::execute()
 
 int32_t World_simulation::J3_remove_pending_objs_job::execute()
 {
-    std::lock_guard<std::mutex> lock1{ m_world_sim.m_deletion_queue_mutex };
-    std::lock_guard<std::mutex> lock2{ m_world_sim.m_data_pool_mutex };
-    for (auto key : m_world_sim.m_deletion_queue)
+    std::lock_guard<std::mutex> lock1{ m_world_sim.m_deletion_indices_queue_mutex };
+    std::lock_guard<std::mutex> lock2{ m_world_sim.m_entity_pool_mutex };
+    for (auto idx : m_world_sim.m_deletion_indices_queue)
     {
-        bool result{
-            m_world_sim.delete_sim_entity(key)
-        };
-        if (!result)
-            std::cerr << "ERROR: Deleting key " << key << " failed." << std::endl;
+        auto& entity{ m_world_sim.m_entity_pool[idx] };
+        entity->on_teardown();
+        entity = nullptr;
     }
-    if (!m_world_sim.m_deletion_queue.empty())
-        m_world_sim.m_rebuild_entity_list = true;
+    // if (!m_world_sim.m_deletion_indices_queue.empty())
+    //     m_world_sim.m_rebuild_entity_list = true;
 
-    m_world_sim.m_deletion_queue.clear();
+    m_world_sim.m_deletion_indices_queue.clear();
     return 0;
 }
 
 int32_t World_simulation::J4_add_pending_objs_job::execute()
 {
     std::lock_guard<std::mutex> lock1{ m_world_sim.m_insertion_queue_mutex };
-    std::lock_guard<std::mutex> lock2{ m_world_sim.m_data_pool_mutex };
+    std::lock_guard<std::mutex> lock2{ m_world_sim.m_entity_pool_mutex };
 
     uint32_t pool_idx_iter_pos{ 0 };
     for (auto& sim_entity_uptr : m_world_sim.m_insertion_queue)
     {
-        bool result{
-            m_world_sim.add_sim_entity(std::move(sim_entity_uptr), pool_idx_iter_pos)
-        };
-        if (!result)
+        bool inserted{ false };
+        for (size_t i = 0; i < k_num_max_entities; i++)
+        if (m_world_sim.m_entity_pool[i] == nullptr)
+        {
+            // Insert.
+            m_world_sim.m_entity_pool[i] = std::move(sim_entity_uptr);
+            m_world_sim.m_entity_pool[i]->on_create(i);
+            inserted = true;
+            break;
+        }
+
+        if (!inserted)
+        {
             std::cerr << "ERROR: Inserting sim entity failed." << std::endl;
+            assert(false);
+            break;
+        }
     }
-    if (!m_world_sim.m_insertion_queue.empty())
-        m_world_sim.m_rebuild_entity_list = true;
+    // if (!m_world_sim.m_insertion_queue.empty())
+    //     m_world_sim.m_rebuild_entity_list = true;
 
     m_world_sim.m_insertion_queue.clear();
     return 0;
@@ -99,7 +110,9 @@ Job_source::Job_next_jobs_return_data World_simulation::fetch_next_jobs_callback
 
         case Job_source_state::EXECUTE_SIMULATION_TICKS:
         {
-            std::lock_guard<std::mutex> lock{ m_data_pool_mutex };
+            static_assert(false);  // @TODO: Get behaviors to execute here instead of calling update on the entities!!!!
+#if 0
+            std::lock_guard<std::mutex> lock{ m_entity_pool_mutex };
             
             if (m_rebuild_entity_list)
             {
@@ -143,6 +156,7 @@ Job_source::Job_next_jobs_return_data World_simulation::fetch_next_jobs_callback
             }
 
             m_current_state = Job_source_state::REMOVE_PENDING_OBJS;
+#endif  // 0
         }
         break;
 

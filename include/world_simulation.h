@@ -18,8 +18,8 @@ class World_simulation : public Job_source
 public:
     World_simulation(uint32_t num_threads);
 
-    void add_sim_entity_to_world(std::unique_ptr<Simulating_entity_ifc>&& entity);
-    void remove_entity_from_world(pool_elem_key_t entity_key);
+    void add_sim_entity_to_world(std::unique_ptr<simulating::Entity_ifc>&& entity);
+    void remove_entity_from_world(size_t entity_idx);
 
 private:
     // Job cycle:
@@ -133,14 +133,18 @@ private:
     };
     std::atomic<Job_source_state> m_current_state;
     Job_timekeeper m_timekeeper;
-    std::atomic_bool m_rebuild_entity_list;
+    // std::atomic_bool m_rebuild_entity_list;  @TODO: @NOCHECKIN: I think this is unneeded???!?!?!?
     Job_next_jobs_return_data fetch_next_jobs_callback() override;
 
     // Insertion and deletion queues.
-    std::vector<std::unique_ptr<Simulating_entity_ifc>> m_insertion_queue;
+    std::vector<std::unique_ptr<simulating::Entity_ifc>> m_insertion_queue;
     std::mutex m_insertion_queue_mutex;
-    std::vector<pool_elem_key_t> m_deletion_queue;
-    std::mutex m_deletion_queue_mutex;
+    std::vector<size_t> m_deletion_indices_queue;
+    std::mutex m_deletion_indices_queue_mutex;
+
+    static constexpr uint32_t k_num_max_entities{ 1024 };
+    std::vector<std::unique_ptr<simulating::Entity_ifc>> m_entity_pool;
+    std::mutex m_entity_pool_mutex;
 
 #if 0
     // Data pool.
