@@ -19,21 +19,14 @@ class Behavior_ifc;
 class Entity_ifc
 {
 public:
-    using Behavior_ifc_list = std::vector<std::unique_ptr<Behavior_ifc>>;
-
     // World simulation events.
-    virtual Behavior_ifc_list on_create(size_t creation_idx) = 0;
-    virtual Behavior_ifc_list on_teardown() = 0;
-};
+    virtual
+        std::vector<Behavior_ifc*>
+        on_create(size_t creation_idx) = 0;
 
-enum Behavior_order : uint32_t
-{
-    SIM_BEHAVIOR_INPUT = 0,
-    SIM_BEHAVIOR_LOGIC,
-    SIM_BEHAVIOR_ANIMATOR,
-    SIM_BEHAVIOR_PRE_PHYSICS_UPDATE,
-
-    NUM_SIM_BEHAVIOR_TYPES
+    virtual
+        std::vector<Behavior_ifc*>
+        on_teardown() = 0;
 };
 
 constexpr uint32_t k_num_max_behavior_data_blocks{ 4096 };
@@ -42,15 +35,16 @@ constexpr uint32_t k_num_max_behavior_data_blocks{ 4096 };
 class Behavior_ifc
 {
 public:
-    Behavior_ifc(Behavior_order order, Behavior_ifc& output_behavior);
+    Behavior_ifc();
     virtual ~Behavior_ifc();
 
-    virtual void on_update(const void* input, void* output) = 0;
+    void set_next_behavior(Behavior_ifc& next_behavior);
+
+    virtual void on_update() = 0;
 
 private:
-    Behavior_order m_order;
     pool::elem_key_t m_input_data_key;   // Set automatically.
-    pool::elem_key_t m_output_data_key;  // From input of output behavior.
+    pool::elem_key_t m_output_data_key{  };  // From input of output behavior.
 };
 
 // @NOTE: I'm sure it's self explanatory, but the order that atomics are used is super
@@ -88,6 +82,8 @@ private:
     static constexpr uint8_t k_setup_reservation{ 1 };
     static constexpr uint8_t k_reserved{ 2 };
     std::atomic_uint8_t m_reserved{ k_unreserved };
+
+    static std::vector<Behavior_data_w_version> s_behavior_data_block_collection;
 };
 
 // Physics system deposits transforms here and renderer withdraws.

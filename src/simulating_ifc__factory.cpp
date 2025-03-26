@@ -7,19 +7,10 @@
 #include "pool_elem_key.h"
 
 
-namespace simulating
-{
-
-static std::vector<Behavior_data_w_version> s_behavior_data_block_collection(k_num_max_behavior_data_blocks);
-
-}  // namespace simulating
-
-
 // Behavior interface.
-simulating::Behavior_ifc::Behavior_ifc(Behavior_order order, Behavior_ifc& output_behavior)
-    : m_order(order)
-    , m_input_data_key(Behavior_data_w_version::allocate_one())
-    , m_output_data_key(output_behavior.m_input_data_key)
+simulating::Behavior_ifc::Behavior_ifc()
+    : m_input_data_key(Behavior_data_w_version::allocate_one())
+    , m_output_data_key(pool::invalid_key())
 {
 }
 
@@ -27,6 +18,14 @@ simulating::Behavior_ifc::~Behavior_ifc()
 {
     Behavior_data_w_version::destroy_one(m_input_data_key);
 }
+
+void simulating::Behavior_ifc::set_next_behavior(Behavior_ifc& next_behavior)
+{
+    m_output_data_key = next_behavior.m_input_data_key;
+}
+
+std::vector<simulating::Behavior_data_w_version>
+    simulating::Behavior_data_w_version::s_behavior_data_block_collection(k_num_max_behavior_data_blocks);
 
 pool::elem_key_t simulating::Behavior_data_w_version::allocate_one()
 {

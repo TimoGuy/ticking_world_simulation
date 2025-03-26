@@ -25,6 +25,7 @@ private:
     // Job cycle:
     // - Setup.
     //   - Create Jolt Physics World.
+    //
     // - Main cycle.
     //   - Use timekeeper to find when next tick starts.
     //   - Execute simulation ticks (multiple jobs per available object).
@@ -57,21 +58,19 @@ private:
         J2_execute_simulation_tick_job(World_simulation& world_sim)
             : Job_ifc("World Simulation execute sim tick job", world_sim)
             , m_world_sim(world_sim)
-            , m_elem_key(0)
         {
         }
 
-        void set_elem_key(pool_elem_key_t new_key)
+        void set_entity_idx(size_t new_entity_idx)
         {
-            static_assert(false);  // @TODO: START HERE Set back up the new behavior-driven simulation system.
-            m_elem_key = new_key;
+            m_entity_idx = new_entity_idx;
         }
 
         int32_t execute() override;
 
     private:
         World_simulation& m_world_sim;
-        pool_elem_key_t m_elem_key;
+        size_t m_entity_idx;
     };
     std::vector<std::unique_ptr<J2_execute_simulation_tick_job>> m_j2_execute_simulation_tick_jobs;
 
@@ -119,14 +118,12 @@ private:
 
         REMOVE_PENDING_SIM_OBJS,
         ADD_PENDING_SIM_OBJS,
-        // PACK_JOB_GROUPS  @TODO: Could have some kind of grouping for all the different component types for memory contiguousness.
         CHECK_FOR_SHUTDOWN_REQUEST,
 
         NUM_STATES
     };
     std::atomic<Job_source_state> m_current_state;
     Job_timekeeper m_timekeeper;
-    // std::atomic_bool m_rebuild_entity_list;  @TODO: @NOCHECKIN: I think this is unneeded???!?!?!?
     Job_next_jobs_return_data fetch_next_jobs_callback() override;
 
     // Insertion and deletion queues.
@@ -139,8 +136,7 @@ private:
     std::vector<std::unique_ptr<simulating::Entity_ifc>> m_entity_pool;
     std::mutex m_entity_pool_mutex;
 
-    static constexpr uint32_t k_num_max_behaviors{ simulating::k_num_max_behavior_data_blocks };
-    std::vector<std::unique_ptr<simulating::Behavior_ifc>> m_behavior_pool;
+    std::vector<std::vector<simulating::Behavior_ifc*>> m_behavior_pool;
     std::mutex m_behavior_pool_mutex;
 
 #if 0
