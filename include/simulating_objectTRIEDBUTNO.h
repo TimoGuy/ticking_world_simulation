@@ -1,5 +1,7 @@
 #pragma once
 
+#if 0
+
 #include <cinttypes>
 #include <functional>
 
@@ -18,3 +20,5 @@ struct Simulating_object_callback_set
     // Renderer query.
     Component_entry_fn on_renderer_transform_query_callback{ nullptr };
 };
+
+#endif  // 0
