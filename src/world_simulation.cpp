@@ -15,6 +15,7 @@ World_simulation::World_simulation(uint32_t num_threads)
     , m_current_state(Job_source_state::SETUP_PHYSICS_WORLD)
     , m_timekeeper(k_world_sim_hz, true)
     , m_entity_pool(k_num_max_entities, nullptr)
+    , m_behavior_pool(k_num_max_behaviors, nullptr)
 {
 }
 
@@ -44,7 +45,11 @@ int32_t World_simulation::J3_remove_pending_objs_job::execute()
     for (auto idx : m_world_sim.m_deletion_indices_queue)
     {
         auto& entity{ m_world_sim.m_entity_pool[idx] };
-        entity->on_teardown();
+        auto remove_behaviors{
+            entity->on_teardown() };  // @TODO: CHANGE THIS 
+        
+        for ()
+
         entity = nullptr;
     }
     // if (!m_world_sim.m_deletion_indices_queue.empty())
@@ -68,7 +73,9 @@ int32_t World_simulation::J4_add_pending_objs_job::execute()
         {
             // Insert.
             m_world_sim.m_entity_pool[i] = std::move(sim_entity_uptr);
-            m_world_sim.m_entity_pool[i]->on_create(i);
+            auto new_behaviors{
+                m_world_sim.m_entity_pool[i]->on_create(i) };
+            
             inserted = true;
             break;
         }

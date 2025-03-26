@@ -139,6 +139,10 @@ private:
     std::vector<std::unique_ptr<simulating::Entity_ifc>> m_entity_pool;
     std::mutex m_entity_pool_mutex;
 
+    static constexpr uint32_t k_num_max_behaviors{ simulating::k_num_max_behavior_data_blocks };
+    std::vector<std::unique_ptr<simulating::Behavior_ifc>> m_behavior_pool;
+    std::mutex m_behavior_pool_mutex;
+
 #if 0
     // Data pool.
     void pool_elem_key_extract_data(pool_elem_key_t key,

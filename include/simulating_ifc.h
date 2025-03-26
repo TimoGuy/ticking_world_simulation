@@ -3,6 +3,7 @@
 #include <array>
 #include <atomic>
 #include <cinttypes>
+#include <vector>
 #include "cglm/types.h"
 #include "jolt_physics_headers.h"
 #include "pool_elem_key.h"
@@ -12,14 +13,17 @@ namespace simulating
 {
 
 using rvec3 = JPH::Real[3];
+class Behavior_ifc;
 
 // Abstract class for entities.
 class Entity_ifc
 {
 public:
+    using Behavior_ifc_list = std::vector<std::unique_ptr<Behavior_ifc>>;
+
     // World simulation events.
-    virtual void on_create(size_t creation_idx) = 0;
-    virtual void on_teardown() = 0;
+    virtual Behavior_ifc_list on_create(size_t creation_idx) = 0;
+    virtual Behavior_ifc_list on_teardown() = 0;
 };
 
 enum Behavior_order : uint32_t
