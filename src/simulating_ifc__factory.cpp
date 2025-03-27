@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cassert>
 #include <vector>
 #include "cglm/cglm.h"
 #include "pool_elem_key.h"
@@ -22,6 +23,31 @@ simulating::Behavior_ifc::~Behavior_ifc()
 void simulating::Behavior_ifc::set_next_behavior(Behavior_ifc& next_behavior)
 {
     m_output_data_key = next_behavior.m_input_data_key;
+}
+
+template<class T>
+const T& simulating::Behavior_ifc::get_data_from_input()
+{
+    if (pool::is_invalid_key(m_input_data_key))
+    {
+        assert(false);
+    }
+
+    return
+        Behavior_data_w_version::get_one_from_key(m_input_data_key)
+            ->read_data<T>();
+}
+
+template<class T>
+void simulating::Behavior_ifc::send_data_to_output(T&& data)
+{
+    if (pool::is_invalid_key(m_output_data_key))
+    {
+        assert(false);
+    }
+
+    Behavior_data_w_version::get_one_from_key(m_output_data_key)
+        ->write_data<T>(std::move(data));
 }
 
 namespace simulating

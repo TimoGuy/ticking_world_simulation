@@ -40,11 +40,17 @@ public:
 
     void set_next_behavior(Behavior_ifc& next_behavior);
 
+    template<class T>
+    const T& get_data_from_input();
+
+    template<class T>
+    void send_data_to_output(T&& data);
+
     virtual void on_update() = 0;
 
 private:
     pool::elem_key_t m_input_data_key;   // Set automatically.
-    pool::elem_key_t m_output_data_key{  };  // From input of output behavior.
+    pool::elem_key_t m_output_data_key;  // From input of output behavior.
 };
 
 // @NOTE: I'm sure it's self explanatory, but the order that atomics are used is super
