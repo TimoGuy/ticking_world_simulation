@@ -11,18 +11,12 @@
 // Behavior interface.
 simulating::Behavior_ifc::Behavior_ifc()
     : m_input_data_key(Behavior_data_w_version::allocate_one())
-    , m_output_data_key(pool::invalid_key())
 {
 }
 
 simulating::Behavior_ifc::~Behavior_ifc()
 {
     Behavior_data_w_version::destroy_one(m_input_data_key);
-}
-
-void simulating::Behavior_ifc::set_next_behavior(Behavior_ifc& next_behavior)
-{
-    m_output_data_key = next_behavior.m_input_data_key;
 }
 
 template<class T>
@@ -39,14 +33,14 @@ const T& simulating::Behavior_ifc::get_data_from_input()
 }
 
 template<class T>
-void simulating::Behavior_ifc::send_data_to_output(T&& data)
+void simulating::Behavior_ifc::send_data_to_output(pool::elem_key_t output_key, T&& data)
 {
-    if (pool::is_invalid_key(m_output_data_key))
+    if (pool::is_invalid_key(output_key))
     {
         assert(false);
     }
 
-    Behavior_data_w_version::get_one_from_key(m_output_data_key)
+    Behavior_data_w_version::get_one_from_key(output_key)
         ->write_data<T>(std::move(data));
 }
 
