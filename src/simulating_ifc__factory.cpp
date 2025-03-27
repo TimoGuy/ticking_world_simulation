@@ -24,8 +24,31 @@ void simulating::Behavior_ifc::set_next_behavior(Behavior_ifc& next_behavior)
     m_output_data_key = next_behavior.m_input_data_key;
 }
 
-std::vector<simulating::Behavior_data_w_version>
-    simulating::Behavior_data_w_version::s_behavior_data_block_collection(k_num_max_behavior_data_blocks);
+namespace simulating
+{
+
+static char s_behavior_data_block_collection__internal_data_chunk
+    [sizeof(Behavior_data_w_version) * k_num_max_behavior_data_blocks];
+static Behavior_data_w_version* s_behavior_data_block_collection{
+    reinterpret_cast<Behavior_data_w_version*>(s_behavior_data_block_collection__internal_data_chunk) };
+
+}  // namespace simulating
+
+void simulating::Behavior_data_w_version::initialize_data_pool()
+{
+    static std::atomic_bool s_first_init{ false };
+    bool expected_first{ false };
+    if (!s_first_init.compare_exchange_strong(expected_first, true))
+    {
+        // Not first initialization.
+        assert(false);
+    }
+
+    for (uint32_t idx = 0; idx < k_num_max_behavior_data_blocks; idx++)
+    {
+        s_behavior_data_block_collection[idx].reset(true);
+    }
+}
 
 pool::elem_key_t simulating::Behavior_data_w_version::allocate_one()
 {
@@ -38,9 +61,7 @@ pool::elem_key_t simulating::Behavior_data_w_version::allocate_one()
         if (block.m_reserved.compare_exchange_strong(reserve_expect, k_setup_reservation))
         {
             // Setup reservation for data.
-            std::fill(block.m_data,
-                      block.m_data + k_behavior_data_block_size,
-                      0);
+            block.reset(false);
             uint32_t version_num{ ++block.m_version };
 
             // Complete reservation.
@@ -101,6 +122,26 @@ void simulating::Behavior_data_w_version::write_data(T&& data)
 {
     static_assert(sizeof(T) <= k_behavior_data_block_size);
     *reinterpret_cast<T*>(m_data) = data;
+}
+
+simulating::Behavior_data_w_version::Behavior_data_w_version()
+{
+    reset(true);
+}
+
+void simulating::Behavior_data_w_version::reset(bool reset_all)
+{
+    // Reset data.
+    std::fill(m_data,
+              m_data + k_behavior_data_block_size,
+              0);
+    
+    if (reset_all)
+    {
+        // Reset metadata as well.
+        m_version  = (uint32_t)-1;
+        m_reserved = k_unreserved;
+    }
 }
 
 // Transform_holder.

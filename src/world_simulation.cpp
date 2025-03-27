@@ -15,8 +15,17 @@ World_simulation::World_simulation(uint32_t num_threads)
         std::make_unique<J4_add_pending_objs_job>(*this))
     , m_current_state(Job_source_state::SETUP_PHYSICS_WORLD)
     , m_timekeeper(k_world_sim_hz, true)
-    , m_entity_pool(k_num_max_entities, nullptr)
 {
+    // Init behavior data pool.
+    simulating::Behavior_data_w_version::initialize_data_pool();
+
+    // Init entity pool.
+    std::lock_guard<std::mutex> lock{ m_entity_pool_mutex };
+    m_entity_pool.reserve(k_num_max_entities);
+    for (size_t i = 0; i < k_num_max_entities; i++)
+    {
+        m_entity_pool.emplace_back(nullptr);
+    }
 }
 
 void World_simulation::add_sim_entity_to_world(std::unique_ptr<simulating::Entity_ifc>&& entity)
@@ -163,11 +172,11 @@ Job_source::Job_next_jobs_return_data World_simulation::fetch_next_jobs_callback
             size_t old_execute_grps{ m_j2_execute_simulation_tick_jobs.size() };
             if (num_behavior_grps > m_j2_execute_simulation_tick_jobs.size())
             {
-                m_j2_execute_simulation_tick_jobs.clear();
-                m_j2_execute_simulation_tick_jobs.resize(num_behavior_grps, nullptr);
-                for (auto& uniq_ptr : m_j2_execute_simulation_tick_jobs)
+                m_j2_execute_simulation_tick_jobs.reserve(num_behavior_grps);
+                while (m_j2_execute_simulation_tick_jobs.size() < num_behavior_grps)
                 {
-                    uniq_ptr = std::make_unique<J2_execute_simulation_tick_job>(*this);
+                    m_j2_execute_simulation_tick_jobs.emplace_back(
+                        std::make_unique<J2_execute_simulation_tick_job>(*this));
                 }
             }
 
@@ -183,7 +192,8 @@ Job_source::Job_next_jobs_return_data World_simulation::fetch_next_jobs_callback
         break;
 
         case Job_source_state::STEP_PHYSICS_WORLD:
-            // m_current_state = Job_source_state::REMOVE_PENDING_SIM_OBJS;
+
+            m_current_state = Job_source_state::REMOVE_PENDING_SIM_OBJS;
             break;
 
         case Job_source_state::REMOVE_PENDING_SIM_OBJS:

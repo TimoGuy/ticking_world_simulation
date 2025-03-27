@@ -58,6 +58,7 @@ public:
     Behavior_data_w_version& operator=(const Behavior_data_w_version&) = delete;
     Behavior_data_w_version& operator=(Behavior_data_w_version&&)      = delete;
 
+    static void initialize_data_pool();
     static pool::elem_key_t allocate_one();
     static bool destroy_one(pool::elem_key_t key);
     static Behavior_data_w_version* get_one_from_key(pool::elem_key_t key);
@@ -71,19 +72,21 @@ public:
 private:
     Behavior_data_w_version();
     ~Behavior_data_w_version() = default;
+
+    void reset(bool reset_all);
     
     static constexpr size_t k_behavior_data_block_size{ sizeof(float_t) * 3 };  // A vec3 (example benchmark data amount).
     using Data_block = uint8_t[k_behavior_data_block_size];
 
     Data_block m_data;
-    uint32_t m_version{ (uint32_t)-1 };
+    uint32_t m_version;
 
     static constexpr uint8_t k_unreserved{ 0 };
     static constexpr uint8_t k_setup_reservation{ 1 };
     static constexpr uint8_t k_reserved{ 2 };
-    std::atomic_uint8_t m_reserved{ k_unreserved };
+    std::atomic_uint8_t m_reserved;
 
-    static std::vector<Behavior_data_w_version> s_behavior_data_block_collection;
+    // inline static std::array<uint8_t, sizeof(Behavior_data_w_version) * k_num_max_behavior_data_blocks> s_behavior_data_block_collection;
 };
 
 // Physics system deposits transforms here and renderer withdraws.
