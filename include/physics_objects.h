@@ -97,6 +97,9 @@ public:
                                Actor_char_ctrller_type_e type_flags,
                                Shape_params_cylinder&& cylinder_params);
 
+    void set_position(JPH::RVec3Arg position);
+    void move(JPH::Vec3Arg velocity);
+
 private:
     Actor_char_ctrller_type_e m_type;
     Shape_const_reference m_shape;

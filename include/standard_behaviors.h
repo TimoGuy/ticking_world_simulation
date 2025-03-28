@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cglm/cglm.h"
+#include "physics_objects.h"
 #include "simulating_ifc.h"
 
 
@@ -35,16 +36,16 @@ class Humanoid_movement
     : public simulating::Behavior_ifc
 {
 public:
-    Humanoid_movement();
+    Humanoid_movement(
+        phys_obj::Actor_character_controller& output_phys_char_ctrl);
 
-    void set_output(pool::elem_key_t output_animator_ctrl,
-                    pool::elem_key_t output_phys_char_ctrl);
+    void set_output(pool::elem_key_t output_animator_ctrl);
 
     void on_update() override;
 
 private:
+    phys_obj::Actor_character_controller& m_output_phys_char_ctrl;
     pool::elem_key_t m_output_animator_ctrl;
-    pool::elem_key_t m_output_phys_char_ctrl;
 };
 
 struct Humanoid_animator_input_data
@@ -62,11 +63,6 @@ struct Humanoid_animator_input_data
     static constexpr uint32_t CHARGE_ATTACK   = 0x00000100;
 
     uint32_t anim_state_packed;
-};
-
-struct Character_controller_input_data
-{
-    vec3 delta_movement;
 };
 
 }  // namespace std_behavior

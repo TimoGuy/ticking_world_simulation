@@ -112,6 +112,16 @@ phys_obj::Actor_character_controller::Actor_character_controller(
     m_character_controller->AddToPhysicsSystem(JPH::EActivation::Activate);
 }
 
+void phys_obj::Actor_character_controller::set_position(JPH::RVec3Arg position)
+{
+    m_character_controller->SetPosition(position);
+}
+
+void phys_obj::Actor_character_controller::move(JPH::Vec3Arg velocity)
+{
+    m_character_controller->SetLinearVelocity(velocity);
+}
+
 
 // Helpers.
 phys_obj::Shape_const_reference phys_obj::create_shape(Shape_type shape_type,
