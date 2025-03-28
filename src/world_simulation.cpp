@@ -153,6 +153,7 @@ Job_source::Job_next_jobs_return_data World_simulation::fetch_next_jobs_callback
     {
         case Job_source_state::SETUP_PHYSICS_WORLD:
             return_data.jobs.emplace_back(m_s1_create_jolt_physics_world.get());
+            m_current_state = Job_source_state::WAIT_UNTIL_TIMEOUT;
             break;
 
         case Job_source_state::WAIT_UNTIL_TIMEOUT:
@@ -180,7 +181,7 @@ Job_source::Job_next_jobs_return_data World_simulation::fetch_next_jobs_callback
                 }
             }
 
-            return_data.jobs.resize(num_behavior_grps);
+            return_data.jobs.reserve(num_behavior_grps);
             for (size_t i = 0; i < num_behavior_grps; i++)
             {
                 m_j2_execute_simulation_tick_jobs[i]->set_entity_idx(i);

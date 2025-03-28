@@ -2,6 +2,7 @@
 
 #include <array>
 #include <atomic>
+#include <cassert>
 #include <cinttypes>
 #include <vector>
 #include "cglm/types.h"
@@ -31,6 +32,8 @@ public:
 
 constexpr uint32_t k_num_max_behavior_data_blocks{ 4096 };
 
+class Behavior_data_w_version;
+
 // Behavior interface: components of entities.
 class Behavior_ifc
 {
@@ -38,11 +41,33 @@ public:
     Behavior_ifc();
     virtual ~Behavior_ifc();
 
-    template<class T>
-    const T& get_data_from_input();
+    inline pool::elem_key_t get_data_key() { return m_input_data_key; }
 
     template<class T>
-    void send_data_to_output(pool::elem_key_t output_key, T&& data);
+    const T& get_data_from_input()
+    {
+        if (pool::is_invalid_key(m_input_data_key))
+        {
+            assert(false);
+        }
+
+        return
+            *reinterpret_cast<T*>(
+                Behavior_data_w_version::get_one_from_key(m_input_data_key)
+                    ->read_data());
+    }
+
+    template<class T>
+    void send_data_to_output(pool::elem_key_t output_key, T&& data)
+    {
+        if (pool::is_invalid_key(output_key))
+        {
+            assert(false);
+        }
+
+        Behavior_data_w_version::get_one_from_key(output_key)
+            ->write_data<T>(std::move(data));
+    }
 
     virtual void on_update() = 0;
 
@@ -66,11 +91,17 @@ public:
     static bool destroy_one(pool::elem_key_t key);
     static Behavior_data_w_version* get_one_from_key(pool::elem_key_t key);
 
-    template<class T>
-    const T& read_data();
+    void* read_data()
+    {
+        return reinterpret_cast<void*>(m_data);
+    }
 
     template<class T>
-    void write_data(T&& data);
+    void write_data(T&& data)
+    {
+        static_assert(sizeof(T) <= k_behavior_data_block_size);
+        *reinterpret_cast<T*>(m_data) = data;
+    }
 
 private:
     Behavior_data_w_version();

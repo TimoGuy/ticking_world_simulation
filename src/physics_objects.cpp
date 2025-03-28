@@ -100,6 +100,8 @@ phys_obj::Actor_character_controller::Actor_character_controller(
                    -(cylinder_params.half_height +
                        (1.0f - std::sinf(settings->mMaxSlopeAngle))));
 
+    assert(s_physics_system != nullptr);
+    assert(s_body_interface_ptr != nullptr);
     m_character_controller =
         new JPH::Character(settings,
                            position,

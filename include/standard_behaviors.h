@@ -65,5 +65,12 @@ struct Humanoid_animator_input_data
     uint32_t anim_state_packed;
 };
 
+class Humanoid_animator
+    : public simulating::Behavior_ifc
+{
+public:
+    void on_update() override {}  // @NOCHECKIN @WIP.
+};
+
 }  // namespace std_behavior
 

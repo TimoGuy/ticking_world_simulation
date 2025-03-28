@@ -15,6 +15,7 @@
 #include "jolt_phys_impl__layers.h"
 #include "jolt_phys_impl__obj_vs_broad_phase_filter.h"
 #include "jolt_phys_impl__custom_listeners.h"
+#include "physics_objects.h"
 
 
 namespace
@@ -23,7 +24,7 @@ namespace
 static std::atomic_bool s_is_initialized{ false };
 
 static std::unique_ptr<JPH::Factory> s_jolt_factory;
-static JPH::TempAllocatorImpl s_jolt_temp_allocator{ 10 * 1024 * 1024 };
+static std::unique_ptr<JPH::TempAllocatorImpl> s_jolt_temp_allocator;
 #if HAWSOO_USE_JOLT_MULTITHREADED_JOB_SYSTEM
 static std::unique_ptr<Job_system_integration> s_job_system_integration;
 #endif  // HAWSOO_USE_JOLT_MULTITHREADED_JOB_SYSTEM
@@ -60,6 +61,8 @@ int32_t World_simulation::S1_create_jolt_physics_world::execute()
     s_jolt_factory = std::make_unique<JPH::Factory>();
     JPH::Factory::sInstance = s_jolt_factory.get();
     JPH::RegisterTypes();
+
+    s_jolt_temp_allocator = std::make_unique<JPH::TempAllocatorImpl>(10 * 1024 * 1024);
 
     constexpr uint32_t k_max_physics_jobs{ 2048 };
     constexpr uint32_t k_max_physics_barriers{ 8 };
@@ -112,6 +115,8 @@ int32_t World_simulation::S1_create_jolt_physics_world::execute()
     phys_sys->SetGravity(JPH::Vec3{ 0.0f, -37.5f, 0.0f });  // From previous project  -Thea 2025/03/13 (2023/09/29)
 
     phys_sys->OptimizeBroadPhase();
+
+    phys_obj::set_references(phys_sys.get(), &phys_sys->GetBodyInterface());
 
     return 0;
 }

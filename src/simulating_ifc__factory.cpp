@@ -19,31 +19,6 @@ simulating::Behavior_ifc::~Behavior_ifc()
     Behavior_data_w_version::destroy_one(m_input_data_key);
 }
 
-template<class T>
-const T& simulating::Behavior_ifc::get_data_from_input()
-{
-    if (pool::is_invalid_key(m_input_data_key))
-    {
-        assert(false);
-    }
-
-    return
-        Behavior_data_w_version::get_one_from_key(m_input_data_key)
-            ->read_data<T>();
-}
-
-template<class T>
-void simulating::Behavior_ifc::send_data_to_output(pool::elem_key_t output_key, T&& data)
-{
-    if (pool::is_invalid_key(output_key))
-    {
-        assert(false);
-    }
-
-    Behavior_data_w_version::get_one_from_key(output_key)
-        ->write_data<T>(std::move(data));
-}
-
 namespace simulating
 {
 
@@ -100,14 +75,23 @@ bool simulating::Behavior_data_w_version::destroy_one(pool::elem_key_t key)
     uint32_t idx, version_num;
     pool::elem_key_extract_data(key, idx, version_num);
 
-    if (idx >= k_num_max_behavior_data_blocks);
+    if (idx >= k_num_max_behavior_data_blocks)
+    {
+        assert(false);
         return false;
+    }
 
     if (s_behavior_data_block_collection[idx].m_reserved.load() != k_reserved)
+    {
+        assert(false);
         return false;
+    }
 
     if (version_num != s_behavior_data_block_collection[idx].m_version)
+    {
+        assert(false);
         return false;
+    }
 
     s_behavior_data_block_collection[idx].m_reserved.store(k_unreserved);
     return true;
@@ -118,30 +102,25 @@ simulating::Behavior_data_w_version* simulating::Behavior_data_w_version::get_on
     uint32_t idx, version_num;
     pool::elem_key_extract_data(key, idx, version_num);
 
-    if (idx >= k_num_max_behavior_data_blocks);
+    if (idx >= k_num_max_behavior_data_blocks)
+    {
+        assert(false);
         return nullptr;
+    }
 
     if (s_behavior_data_block_collection[idx].m_reserved.load() != k_reserved)
+    {
+        assert(false);
         return nullptr;
+    }
 
     if (version_num != s_behavior_data_block_collection[idx].m_version)
+    {
+        assert(false);
         return nullptr;
+    }
 
     return &s_behavior_data_block_collection[idx];
-}
-
-template<class T>
-const T& simulating::Behavior_data_w_version::read_data()
-{
-    static_assert(sizeof(T) <= k_behavior_data_block_size);
-    return *reinterpret_cast<T*>(m_data);
-}
-
-template<class T>
-void simulating::Behavior_data_w_version::write_data(T&& data)
-{
-    static_assert(sizeof(T) <= k_behavior_data_block_size);
-    *reinterpret_cast<T*>(m_data) = data;
 }
 
 simulating::Behavior_data_w_version::Behavior_data_w_version()

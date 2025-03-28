@@ -58,6 +58,7 @@ private:
         J2_execute_simulation_tick_job(World_simulation& world_sim)
             : Job_ifc("World Simulation execute sim tick job", world_sim)
             , m_world_sim(world_sim)
+            , m_entity_idx(0)
         {
         }
 
