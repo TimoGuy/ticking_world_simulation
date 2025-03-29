@@ -13,13 +13,16 @@
 constexpr uint32_t k_world_sim_hz{ 50 };
 constexpr float_t k_world_sim_delta_time{ 1.0f / k_world_sim_hz };
 
-class World_simulation : public Job_source
+class World_simulation : public Job_source, public simulating::Add_behavior_group_ifc
 {
 public:
     World_simulation(uint32_t num_threads);
 
     void add_sim_entity_to_world(std::unique_ptr<simulating::Entity_ifc>&& entity);
     void remove_entity_from_world(size_t entity_idx);
+
+    void add_behavior_group(std::vector<simulating::Behavior_ifc*>&& group) override;
+    void remove_behavior_group(std::vector<simulating::Behavior_ifc*>&& group) override;
 
 private:
     // Job cycle:
