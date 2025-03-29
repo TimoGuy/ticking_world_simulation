@@ -5,12 +5,12 @@
 
 // class Humanoid_movement.
 std_behavior::Humanoid_movement::Humanoid_movement(
-    phys_obj::Actor_character_controller& output_phys_char_ctrl)
-    : m_output_phys_char_ctrl(output_phys_char_ctrl)
+    phys_obj::Actor_character_controller&& phys_char_ctrl)
+    : m_phys_char_ctrl(std::move(phys_char_ctrl))
 {
 }
 
-void std_behavior::Humanoid_movement::set_output(
+void std_behavior::Humanoid_movement::set_animator(
     pool::elem_key_t output_animator_ctrl)
 {
     m_output_animator_ctrl = output_animator_ctrl;
@@ -36,5 +36,5 @@ void std_behavior::Humanoid_movement::on_update()
         1.0f,
         input_data.flat_movement[1]
     };
-    m_output_phys_char_ctrl.move(delta_movement);
+    m_phys_char_ctrl.move(delta_movement);
 }

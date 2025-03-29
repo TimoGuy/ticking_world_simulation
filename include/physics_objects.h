@@ -74,6 +74,7 @@ public:
     Actor_kinematic(JPH::RVec3 position,
                     JPH::Quat rotation,
                     std::vector<Shape_w_transform>&& shape_params);
+    ~Actor_kinematic();
 
 private:
     Shape_const_reference m_shape;
@@ -96,6 +97,7 @@ public:
     Actor_character_controller(JPH::RVec3 position,
                                Actor_char_ctrller_type_e type_flags,
                                Shape_params_cylinder&& cylinder_params);
+    ~Actor_character_controller();
 
     void set_position(JPH::RVec3Arg position);
     void move(JPH::Vec3Arg velocity);

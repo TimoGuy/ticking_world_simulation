@@ -16,9 +16,13 @@ namespace simulating
 using rvec3 = JPH::Real[3];
 class Behavior_ifc;
 
+// Interface for entities to edit behavior groups.
 class Edit_behavior_groups_ifc
 {
 public:
+    // @TODO: @IDEA: Instead of sending vector of pointers, perhaps move the unique pointers,
+    //   and then for `remove_behavior_group()` insert the key returned when adding the behavior group.
+    //   Actually, I think this is a really good idea and should be the interface ngl.  -Thea 2025/03/29
     virtual void add_behavior_group(std::vector<Behavior_ifc*>&& group) = 0;
     virtual void remove_behavior_group(std::vector<Behavior_ifc*>&& group) = 0;
 };

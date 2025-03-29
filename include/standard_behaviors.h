@@ -37,14 +37,14 @@ class Humanoid_movement
 {
 public:
     Humanoid_movement(
-        phys_obj::Actor_character_controller& output_phys_char_ctrl);
+        phys_obj::Actor_character_controller&& phys_char_ctrl);
 
-    void set_output(pool::elem_key_t output_animator_ctrl);
+    void set_animator(pool::elem_key_t output_animator_ctrl);
 
     void on_update() override;
 
 private:
-    phys_obj::Actor_character_controller& m_output_phys_char_ctrl;
+    phys_obj::Actor_character_controller m_phys_char_ctrl;
     pool::elem_key_t m_output_animator_ctrl;
 };
 

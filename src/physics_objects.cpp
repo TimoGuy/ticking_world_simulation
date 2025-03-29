@@ -79,6 +79,12 @@ phys_obj::Actor_kinematic::Actor_kinematic(JPH::RVec3 position,
             JPH::EActivation::Activate);
 }
 
+phys_obj::Actor_kinematic::~Actor_kinematic()
+{
+    // @TODO: STUB
+    assert(false);
+}
+
 phys_obj::Actor_character_controller::Actor_character_controller(
     JPH::RVec3 position,
     Actor_char_ctrller_type_e type_flags,
@@ -112,6 +118,12 @@ phys_obj::Actor_character_controller::Actor_character_controller(
                                            JPH::EMotionQuality::Discrete);
 
     m_character_controller->AddToPhysicsSystem(JPH::EActivation::Activate);
+}
+
+phys_obj::Actor_character_controller::~Actor_character_controller()
+{
+    // @TODO: STUB
+    assert(false);
 }
 
 void phys_obj::Actor_character_controller::set_position(JPH::RVec3Arg position)
