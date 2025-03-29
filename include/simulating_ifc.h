@@ -16,7 +16,7 @@ namespace simulating
 using rvec3 = JPH::Real[3];
 class Behavior_ifc;
 
-class Add_behavior_group_ifc
+class Edit_behavior_groups_ifc
 {
 public:
     virtual void add_behavior_group(std::vector<Behavior_ifc*>&& group) = 0;
@@ -28,8 +28,8 @@ class Entity_ifc
 {
 public:
     // World simulation events.
-    virtual void on_create(size_t creation_idx, Add_behavior_group_ifc& behavior_set) = 0;
-    virtual void on_teardown(Add_behavior_group_ifc& behavior_set) = 0;
+    virtual void on_create(size_t creation_idx, Edit_behavior_groups_ifc& editor) = 0;
+    virtual void on_teardown(Edit_behavior_groups_ifc& editor) = 0;
 };
 
 constexpr uint32_t k_num_max_behavior_data_blocks{ 4096 };

@@ -13,7 +13,7 @@
 constexpr uint32_t k_world_sim_hz{ 50 };
 constexpr float_t k_world_sim_delta_time{ 1.0f / k_world_sim_hz };
 
-class World_simulation : public Job_source, public simulating::Add_behavior_group_ifc
+class World_simulation : public Job_source, public simulating::Edit_behavior_groups_ifc
 {
 public:
     World_simulation(uint32_t num_threads);
