@@ -74,6 +74,15 @@ public:
     Actor_kinematic(JPH::RVec3 position,
                     JPH::Quat rotation,
                     std::vector<Shape_w_transform>&& shape_params);
+
+    // Delete copy constructors.
+    Actor_kinematic(const Actor_kinematic&)            = delete;
+    Actor_kinematic& operator=(const Actor_kinematic&) = delete;
+
+    // Define move constructors.
+    Actor_kinematic(Actor_kinematic&&)            = default;
+    Actor_kinematic& operator=(Actor_kinematic&&) = default;
+
     ~Actor_kinematic();
 
 private:
@@ -97,6 +106,15 @@ public:
     Actor_character_controller(JPH::RVec3 position,
                                Actor_char_ctrller_type_e type_flags,
                                Shape_params_cylinder&& cylinder_params);
+    
+    // Delete copy constructors.
+    Actor_character_controller(const Actor_character_controller&)            = delete;
+    Actor_character_controller& operator=(const Actor_character_controller&) = delete;
+
+    // Define move constructors.
+    Actor_character_controller(Actor_character_controller&&)            = default;
+    Actor_character_controller& operator=(Actor_character_controller&&) = default;
+
     ~Actor_character_controller();
 
     void set_position(JPH::RVec3Arg position);

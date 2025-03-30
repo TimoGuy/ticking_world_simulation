@@ -16,15 +16,18 @@ constexpr float_t k_world_sim_delta_time{ 1.0f / k_world_sim_hz };
 class World_simulation : public Job_source, public simulating::Edit_behavior_groups_ifc
 {
 public:
+    using Behavior_group = std::vector<std::unique_ptr<simulating::Behavior_ifc>>;
+
     World_simulation(uint32_t num_threads);
 
     void add_sim_entity_to_world(std::unique_ptr<simulating::Entity_ifc>&& entity);
     void remove_entity_from_world(size_t entity_idx);
 
-    void add_behavior_group(std::vector<simulating::Behavior_ifc*>&& group) override;
-    void remove_behavior_group(std::vector<simulating::Behavior_ifc*>&& group) override;
+    behavior_group_key_t add_behavior_group(Behavior_group&& group) override;
+    void remove_behavior_group(behavior_group_key_t group_key) override;
 
 private:
+
     // Job cycle:
     // - Setup.
     //   - Create Jolt Physics World.
@@ -61,20 +64,20 @@ private:
         J2_execute_simulation_tick_job(World_simulation& world_sim)
             : Job_ifc("World Simulation execute sim tick job", world_sim)
             , m_world_sim(world_sim)
-            , m_entity_idx(0)
+            , m_group_ptr(nullptr)
         {
         }
 
-        void set_entity_idx(size_t new_entity_idx)
+        void set_behavior_group(Behavior_group* group_ptr)
         {
-            m_entity_idx = new_entity_idx;
+            m_group_ptr = group_ptr;
         }
 
         int32_t execute() override;
 
     private:
         World_simulation& m_world_sim;
-        size_t m_entity_idx;
+        Behavior_group* m_group_ptr;
     };
     std::vector<std::unique_ptr<J2_execute_simulation_tick_job>> m_j2_execute_simulation_tick_jobs;
 
@@ -140,7 +143,8 @@ private:
     std::vector<std::unique_ptr<simulating::Entity_ifc>> m_entity_pool;
     std::mutex m_entity_pool_mutex;
 
-    std::vector<std::vector<simulating::Behavior_ifc*>> m_behavior_pool;
+    std::atomic_size_t m_behavior_pool_key_generator{ 0 };
+    std::unordered_map<behavior_group_key_t, Behavior_group> m_behavior_pool;
     std::mutex m_behavior_pool_mutex;
 
 #if 0

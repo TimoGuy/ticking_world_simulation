@@ -40,57 +40,39 @@ void World_simulation::remove_entity_from_world(size_t entity_idx)
     m_deletion_indices_queue.emplace_back(entity_idx);
 }
 
-void World_simulation::add_behavior_group(std::vector<simulating::Behavior_ifc*>&& group)
+simulating::Edit_behavior_groups_ifc::behavior_group_key_t
+    World_simulation::add_behavior_group(Behavior_group&& group)
 {
     std::lock_guard<std::mutex> lock{ m_behavior_pool_mutex };
-    m_behavior_pool.emplace_back(std::move(group));
+    behavior_group_key_t key{ m_behavior_pool_key_generator++ };
+    m_behavior_pool.emplace(key, std::move(group));
+    return key;
 }
 
-void World_simulation::remove_behavior_group(std::vector<simulating::Behavior_ifc*>&& group)
+void World_simulation::remove_behavior_group(behavior_group_key_t group_key)
 {
     std::lock_guard<std::mutex> lock{ m_behavior_pool_mutex };
 
-    bool erased{ false };
-    for (size_t pool_idx = 0; pool_idx < m_behavior_pool.size(); pool_idx++)
+    if (m_behavior_pool.find(group_key) != m_behavior_pool.end())
     {
-        auto& behavior_execution_list{ m_behavior_pool[pool_idx] };
-        if (group.size() == behavior_execution_list.size())
-        {
-            bool matches{ true };
-            for (size_t behavior_idx = 0;
-                behavior_idx < group.size();
-                behavior_idx++)
-            {
-                if (group[behavior_idx] != behavior_execution_list[behavior_idx])
-                {
-                    matches = false;
-                    break;
-                }
-            }
-
-            if (matches)
-            {
-                // Found correct behavior list to delete.
-                m_behavior_pool.erase(
-                    m_behavior_pool.begin() + pool_idx);
-                erased = true;
-                break;
-            }
-        }
+        m_behavior_pool.erase(group_key);
     }
-
-    assert(erased);
+    else
+    {
+        // Key not found.
+        assert(false);
+    }
 }
 
 // Jobs.
 int32_t World_simulation::J2_execute_simulation_tick_job::execute()
 {
     // Execute all behaviors in order of the group.
-    m_world_sim.m_behavior_pool_mutex.lock();
-    auto& behavior_exec_grp{ m_world_sim.m_behavior_pool[m_entity_idx] };
-    m_world_sim.m_behavior_pool_mutex.unlock();
+    /*m_world_sim.m_behavior_pool_mutex.lock();
+    auto& behavior_exec_grp{ m_world_sim.m_behavior_pool.begin() + m_entity_idx };
+    m_world_sim.m_behavior_pool_mutex.unlock();*/
 
-    for (auto behavior : behavior_exec_grp)
+    for (auto& behavior : *m_group_ptr)
     {
         behavior->on_update();
     }
@@ -129,7 +111,7 @@ int32_t World_simulation::J4_add_pending_objs_job::execute()
         {
             // Insert.
             m_world_sim.m_entity_pool[i] = std::move(sim_entity_uptr);
-            m_world_sim.m_entity_pool[i]->on_create(i, m_world_sim);
+            m_world_sim.m_entity_pool[i]->on_create(m_world_sim, i);
             inserted = true;
             break;
         }
@@ -187,10 +169,13 @@ Job_source::Job_next_jobs_return_data World_simulation::fetch_next_jobs_callback
             }
 
             return_data.jobs.reserve(num_behavior_grps);
-            for (size_t i = 0; i < num_behavior_grps; i++)
+            size_t i{ 0 };
+            for (auto& behavior_group : m_behavior_pool)
             {
-                m_j2_execute_simulation_tick_jobs[i]->set_entity_idx(i);
+                m_j2_execute_simulation_tick_jobs[i]
+                    ->set_behavior_group(&behavior_group.second);
                 return_data.jobs.emplace_back(m_j2_execute_simulation_tick_jobs[i].get());
+                i++;
             }
 
             m_current_state = Job_source_state::STEP_PHYSICS_WORLD;
