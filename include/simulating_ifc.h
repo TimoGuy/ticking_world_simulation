@@ -21,9 +21,7 @@ class Edit_behavior_groups_ifc
 {
 public:
     using behavior_group_key_t = uint64_t;
-    // @TODO: @IDEA: Instead of sending vector of pointers, perhaps move the unique pointers,
-    //   and then for `remove_behavior_group()` insert the key returned when adding the behavior group.
-    //   Actually, I think this is a really good idea and should be the interface ngl.  -Thea 2025/03/29
+
     virtual behavior_group_key_t add_behavior_group(std::vector<std::unique_ptr<Behavior_ifc>>&& group) = 0;
     virtual void remove_behavior_group(behavior_group_key_t group_key) = 0;
 };
