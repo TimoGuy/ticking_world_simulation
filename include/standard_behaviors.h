@@ -25,6 +25,34 @@ private:
     pool::elem_key_t m_output_humanoid_mvt;
 };
 
+// Physics wrappers.
+struct Kinematic_collider_transform_input_data
+{
+    enum Transform_data_type : uint8_t
+    {
+        TRANS_DATA_TYPE_NONE = 0,
+        TRANS_DATA_TYPE_SET,  // i.e. no interpolation with this.
+        TRANS_DATA_TYPE_MOVE_ABSOLUTE,
+        TRANS_DATA_TYPE_MOVE_DELTA,
+
+        NUM_TRANS_DATA_TYPES
+    } type;
+    JPH::RVec3 position;
+    JPH::Quat  rotation;
+};
+
+class Kinematic_collider
+    : public simulating::Behavior_ifc
+{
+public:
+    Kinematic_collider(phys_obj::Actor_kinematic&& phys_kinematic_actor);
+
+    void on_update() override;
+
+private:
+    phys_obj::Actor_kinematic m_phys_kinematic_actor;
+};
+
 struct Humanoid_movement_input_data
 {
     vec2 flat_movement;

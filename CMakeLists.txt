@@ -40,6 +40,7 @@ add_library(${PROJECT_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/src/simulating_ifc__factory.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/standard_behaviors__gamepad_input.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/standard_behaviors__humanoid_movement.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/standard_behaviors__kinematic_collider.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/world_simulation__create_jolt_physics_world.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/world_simulation.cpp
 )

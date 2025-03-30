@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <utility>  // std::pair
 #include <vector>
@@ -57,6 +58,44 @@ using Shape_params_tapered_cylinder = Shape_params_tapered_capsule;
 using Shape_params_ptr = void*;
 
 using Shape_const_reference = JPH::RefConst<JPH::Shape>;
+
+template<class T>
+Shape_params_ptr construct_shape_into_memory(std::vector<uint32_t>& in_out_memory, T&& shape)
+{
+    if (in_out_memory.size() * sizeof(uint32_t) + sizeof(shape) >
+        in_out_memory.max_size() * sizeof(uint32_t))
+    {
+        std::cerr
+            << "ERROR: Data overflow that will cause `in_out_memory` to need reallocation."
+            << std::endl;
+        assert(false);
+        return nullptr;
+    }
+
+    if (sizeof(shape) % sizeof(uint32_t) != 0)
+    {
+        std::cerr
+            << "ERROR: Struct does not fit equally into `uint32_t` ("
+            << sizeof(uint32_t) << "B): "
+            << sizeof(shape) << "B"
+            << std::endl;
+        assert(false);
+        return nullptr;
+    }
+
+    Shape_params_ptr ret_ptr{ nullptr };
+    auto ptr_writer{ reinterpret_cast<uint32_t*>(&shape) };
+    for (size_t i = 0; i < (sizeof(shape) / sizeof(uint32_t)); i++)
+    {
+        in_out_memory.emplace_back(ptr_writer[i]);
+        if (ret_ptr == nullptr)
+        {
+            ret_ptr = &in_out_memory.back();
+        }
+    }
+
+    return ret_ptr;
+}
 
 
 // Actors.
