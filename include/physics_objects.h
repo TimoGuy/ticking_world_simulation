@@ -106,7 +106,7 @@ public:
     Actor_character_controller(JPH::RVec3 position,
                                Actor_char_ctrller_type_e type_flags,
                                Shape_params_cylinder&& cylinder_params);
-    
+
     // Delete copy constructors.
     Actor_character_controller(const Actor_character_controller&)            = delete;
     Actor_character_controller& operator=(const Actor_character_controller&) = delete;
