@@ -81,11 +81,15 @@ phys_obj::Actor_kinematic::Actor_kinematic(JPH::RVec3 position,
 
 phys_obj::Actor_kinematic::~Actor_kinematic()
 {
-    // @TODO: STUB
-    // @TODO: It'll have to be that you remove and destroy the body from the physics system, but idk how to do that when
-    //   you'll have to implement your own move constructor ig. Hmmmmmmmm, ig you could change `m_body_id` to an invalid id
-    //   upon getting this destructor called?  -Thea 2025/03/29
-    assert(false);
+    // @NOTE: This may be not quite the right thing to do, however, this is how
+    //   I'm choosing to deal with it.
+    //   Essentially, the shape ref should still be connected if this is the
+    //   owning object. If it is, then it's responsible for removing the physics
+    //   body.  -Thea 2025/03/31
+    if (m_shape != nullptr)
+    {
+        s_body_interface_ptr->RemoveBody(m_body_id);
+    }
 }
 
 phys_obj::Actor_character_controller::Actor_character_controller(
