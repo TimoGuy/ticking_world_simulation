@@ -10,9 +10,6 @@
 #include "simulating_ifc.h"
 
 
-constexpr uint32_t k_world_sim_hz{ 50 };
-constexpr float_t k_world_sim_delta_time{ 1.0f / k_world_sim_hz };
-
 class World_simulation : public Job_source, public simulating::Edit_behavior_groups_ifc
 {
 public:

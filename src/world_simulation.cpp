@@ -4,6 +4,7 @@
 #include <chrono>
 #include <iostream>
 #include "simulating_ifc.h"
+#include "world_simulation_settings.h"
 
 
 World_simulation::World_simulation(uint32_t num_threads)

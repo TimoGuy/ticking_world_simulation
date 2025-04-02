@@ -3,6 +3,7 @@
 #include "cglm/cglm.h"
 #include "jolt_physics_headers.h"
 #include "jolt_phys_impl__layers.h"
+#include "world_simulation_settings.h"
 
 
 namespace phys_obj
@@ -90,6 +91,30 @@ phys_obj::Actor_kinematic::~Actor_kinematic()
     {
         s_body_interface_ptr->RemoveBody(m_body_id);
     }
+}
+
+void phys_obj::Actor_kinematic::get_position_and_rotation(JPH::RVec3& out_position,
+                                                          JPH::Quat& out_rotation)
+{
+    s_body_interface_ptr->GetPositionAndRotation(m_body_id,
+                                                 out_position,
+                                                 out_rotation);
+}
+
+void phys_obj::Actor_kinematic::set_transform(JPH::RVec3Arg position, JPH::QuatArg rotation)
+{
+    s_body_interface_ptr->SetPositionAndRotation(m_body_id,
+                                                 position,
+                                                 rotation,
+                                                 JPH::EActivation::DontActivate);
+}
+
+void phys_obj::Actor_kinematic::move_kinematic(JPH::RVec3Arg position, JPH::QuatArg rotation)
+{
+    s_body_interface_ptr->MoveKinematic(m_body_id,
+                                        position,
+                                        rotation,
+                                        k_world_sim_delta_time);
 }
 
 phys_obj::Actor_character_controller::Actor_character_controller(

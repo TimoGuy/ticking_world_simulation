@@ -33,8 +33,9 @@ void std_behavior::Kinematic_collider::on_update()
 
     case TRANS_DATA_TYPE_MOVE_DELTA:
     {
-        JPH::RVec3 prev_position{ m_phys_kinematic_actor.get_position() };
-        JPH::Quat  prev_rotation{ m_phys_kinematic_actor.get_rotation() };
+        JPH::RVec3 prev_position;
+        JPH::Quat  prev_rotation;
+        m_phys_kinematic_actor.get_position_and_rotation(prev_position, prev_rotation);
         m_phys_kinematic_actor.move_kinematic(prev_position + input_data.position,
                                               prev_rotation * input_data.rotation);
         break;

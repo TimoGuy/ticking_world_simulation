@@ -124,6 +124,11 @@ public:
 
     ~Actor_kinematic();
 
+    void get_position_and_rotation(JPH::RVec3& out_position,
+                                   JPH::Quat& out_rotation);
+    void set_transform(JPH::RVec3Arg position, JPH::QuatArg rotation);
+    void move_kinematic(JPH::RVec3Arg position, JPH::QuatArg rotation);
+
 private:
     Shape_const_reference m_shape;
     JPH::BodyID m_body_id;

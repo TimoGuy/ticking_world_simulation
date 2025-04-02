@@ -26,19 +26,21 @@ private:
 };
 
 // Physics wrappers.
+enum Transform_data_type : uint8_t
+{
+    TRANS_DATA_TYPE_NONE = 0,
+    TRANS_DATA_TYPE_SET,  // i.e. no interpolation with this.
+    TRANS_DATA_TYPE_MOVE_ABSOLUTE,
+    TRANS_DATA_TYPE_MOVE_DELTA,
+
+    NUM_TRANS_DATA_TYPES
+};
+
 struct Kinematic_collider_transform_input_data
 {
-    enum Transform_data_type : uint8_t
-    {
-        TRANS_DATA_TYPE_NONE = 0,
-        TRANS_DATA_TYPE_SET,  // i.e. no interpolation with this.
-        TRANS_DATA_TYPE_MOVE_ABSOLUTE,
-        TRANS_DATA_TYPE_MOVE_DELTA,
-
-        NUM_TRANS_DATA_TYPES
-    } type;
-    JPH::RVec3 position;
-    JPH::Quat  rotation;
+    Transform_data_type type;
+    JPH::RVec3          position;
+    JPH::Quat           rotation;
 };
 
 class Kinematic_collider
