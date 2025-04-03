@@ -29,6 +29,7 @@ add_library(${PROJECT_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/include/simulating_ifc.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/standard_behaviors.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ticking_world_simulation_public.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/transform_read_ifc.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/world_simulation.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/jolt_phys_impl__custom_listeners.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/jolt_phys_impl__error_callbacks.h

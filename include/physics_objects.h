@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cassert>
 #include <functional>
 #include <iostream>
@@ -8,6 +9,7 @@
 #include <vector>
 #include "cglm/cglm.h"
 #include "jolt_physics_headers.h"
+#include "transform_read_ifc.h"
 
 
 namespace phys_obj
@@ -16,17 +18,12 @@ namespace phys_obj
 // References.
 void set_references(void* physics_system, void* body_interface);
 
-// Public interface for reading transforms.
-class Transform_read_ifc
-{
-public:
-    virtual void calculate_current_transform(mat4& out_transform) = 0;
-};
+
 
 // Physics system deposits transforms here and renderer withdraws.
 using rvec3 = JPH::Real[3];
 
-class Transform_holder : public Transform_read_ifc
+class Transform_holder : public world_sim::Transform_read_ifc
 {
 public:
     struct Transform_decomposed
