@@ -13,7 +13,6 @@
 namespace simulating
 {
 
-using rvec3 = JPH::Real[3];
 class Behavior_ifc;
 
 // Interface for entities to edit behavior groups.
@@ -124,46 +123,6 @@ private:
     static constexpr uint8_t k_setup_reservation{ 1 };
     static constexpr uint8_t k_reserved{ 2 };
     std::atomic_uint8_t m_reserved;
-
-    // inline static std::array<uint8_t, sizeof(Behavior_data_w_version) * k_num_max_behavior_data_blocks> s_behavior_data_block_collection;
-};
-
-// Physics system deposits transforms here and renderer withdraws.
-class Transform_read_ifc  // @NOCHECKIN: @TODO: Put this in with a shared place between the renderer and world sim.
-{
-public:
-    virtual void calculate_current_transform(mat4& out_transform) = 0;
-};
-
-class Transform_holder : public Transform_read_ifc
-{
-public:
-    struct Transform_decomposed
-    {
-        rvec3  position;
-        versor rotation;
-        vec3   scale;
-    };
-
-    Transform_holder(bool interpolate, Transform_decomposed&& initial_transform);
-
-    inline void set_interpolate(bool interpolate) { m_interpolate_transform = interpolate; }
-
-    void deposit_physics_transform(Transform_decomposed&& transform);
-    void calculate_current_transform(mat4& out_transform) override;
-
-    inline static void increment_buffer_offset() { m_buffer_offset++; };
-
-private:
-    std::atomic_bool m_interpolate_transform;
-
-    inline static std::atomic_size_t m_buffer_offset{ 0 };
-    static constexpr size_t k_read_a_offset{ 0 };
-    static constexpr size_t k_read_b_offset{ 1 };
-    static constexpr size_t k_write_offset{ 2 };
-
-    static constexpr size_t k_num_buffers{ 3 };
-    std::array<Transform_decomposed, k_num_buffers> m_transform_triple_buffer;
 };
 
 }  // namespace simulating
