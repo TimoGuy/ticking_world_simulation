@@ -189,7 +189,7 @@ void simulating::Transform_holder::calculate_current_transform(mat4& out_transfo
         auto& transform_b{
             m_transform_triple_buffer[(buffer_offset_copy + k_read_b_offset) % k_num_buffers] };
 
-        // @INCOMPLETE: Truncated data fyi (if using double real).
+        // @INCOMPLETE: Truncated data (if using double real JPH::RVec3).
         pos[0] = transform_a.position[0] + t * (transform_b.position[0] - transform_a.position[0]);
         pos[1] = transform_a.position[1] + t * (transform_b.position[1] - transform_a.position[1]);
         pos[2] = transform_a.position[2] + t * (transform_b.position[2] - transform_a.position[2]);
@@ -203,7 +203,7 @@ void simulating::Transform_holder::calculate_current_transform(mat4& out_transfo
         auto& transform_b{
             m_transform_triple_buffer[(buffer_offset_copy + k_read_b_offset) % k_num_buffers] };
 
-        // @INCOMPLETE: Truncated data fyi (if using double real).
+        // @INCOMPLETE: Truncated data (if using double real JPH::RVec3).
         pos[0] = transform_b.position[0];
         pos[1] = transform_b.position[1];
         pos[2] = transform_b.position[2];

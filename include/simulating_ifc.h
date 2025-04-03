@@ -129,7 +129,13 @@ private:
 };
 
 // Physics system deposits transforms here and renderer withdraws.
-class Transform_holder
+class Transform_read_ifc  // @NOCHECKIN: @TODO: Put this in with a shared place between the renderer and world sim.
+{
+public:
+    virtual void calculate_current_transform(mat4& out_transform) = 0;
+};
+
+class Transform_holder : public Transform_read_ifc
 {
 public:
     struct Transform_decomposed
@@ -144,7 +150,9 @@ public:
     inline void set_interpolate(bool interpolate) { m_interpolate_transform = interpolate; }
 
     void deposit_physics_transform(Transform_decomposed&& transform);
-    void calculate_current_transform(mat4& out_transform);
+    void calculate_current_transform(mat4& out_transform) override;
+
+    inline static void increment_buffer_offset() { m_buffer_offset++; };
 
 private:
     std::atomic_bool m_interpolate_transform;
