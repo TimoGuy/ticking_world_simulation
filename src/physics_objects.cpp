@@ -25,6 +25,88 @@ void phys_obj::set_references(void* physics_system, void* body_interface)
     s_body_interface_ptr = reinterpret_cast<JPH::BodyInterface*>(body_interface);
 }
 
+// Transform_holder.
+phys_obj::Transform_holder::Transform_holder(
+    bool interpolate,
+    const Query_physics_transform_ifc& physics_transform_ref)
+    : m_interpolate_transform(interpolate)
+    , m_physics_transform_ref(physics_transform_ref)
+{
+    auto initial_transform{ m_physics_transform_ref.query_physics_transform() };
+    for (size_t i = 0; i < k_num_buffers; i++)
+    {
+        m_transform_triple_buffer[i].position[0] = initial_transform.position[0];
+        m_transform_triple_buffer[i].position[1] = initial_transform.position[1];
+        m_transform_triple_buffer[i].position[2] = initial_transform.position[2];
+        glm_quat_copy(initial_transform.rotation, m_transform_triple_buffer[i].rotation);
+        glm_vec3_copy(initial_transform.scale, m_transform_triple_buffer[i].scale);
+    }
+}
+
+void phys_obj::Transform_holder::update_physics_transform()
+{
+    auto transform{ m_physics_transform_ref.query_physics_transform() };
+
+    auto& current_transform{
+        m_transform_triple_buffer[(m_buffer_offset + k_write_offset) % k_num_buffers] };
+
+    current_transform.position[0] = transform.position[0];
+    current_transform.position[1] = transform.position[1];
+    current_transform.position[2] = transform.position[2];
+    glm_quat_copy(transform.rotation, current_transform.rotation);
+    glm_vec3_copy(transform.scale, current_transform.scale);
+}
+
+void phys_obj::Transform_holder::read_current_transform(mat4& out_transform)
+{
+    // @TODO: In the future with world chunks and camera tricks for rendering large worlds,
+    //   convert the true transforms into the camera based transform here!
+    //   For now tho, it all just gets truncated.
+
+    vec3   pos;
+    versor rot;
+    vec3   sca;
+
+    size_t buffer_offset_copy{ m_buffer_offset };  // To only do one atomic load.
+
+    if (m_interpolate_transform)
+    {
+        float_t t{ 0.5f };
+
+        auto& transform_a{
+            m_transform_triple_buffer[(buffer_offset_copy + k_read_a_offset) % k_num_buffers] };
+        auto& transform_b{
+            m_transform_triple_buffer[(buffer_offset_copy + k_read_b_offset) % k_num_buffers] };
+
+        // @INCOMPLETE: Truncated data (if using double real JPH::RVec3).
+        pos[0] = transform_a.position[0] + t * (transform_b.position[0] - transform_a.position[0]);
+        pos[1] = transform_a.position[1] + t * (transform_b.position[1] - transform_a.position[1]);
+        pos[2] = transform_a.position[2] + t * (transform_b.position[2] - transform_a.position[2]);
+
+        glm_quat_nlerp(transform_a.rotation, transform_b.rotation, t, rot);
+
+        glm_vec3_lerp(transform_a.scale, transform_b.scale, t, sca);
+    }
+    else
+    {
+        auto& transform_b{
+            m_transform_triple_buffer[(buffer_offset_copy + k_read_b_offset) % k_num_buffers] };
+
+        // @INCOMPLETE: Truncated data (if using double real JPH::RVec3).
+        pos[0] = transform_b.position[0];
+        pos[1] = transform_b.position[1];
+        pos[2] = transform_b.position[2];
+
+        glm_quat_copy(transform_b.rotation, rot);
+
+        glm_vec3_copy(transform_b.scale, sca);
+    }
+
+    // Write transform.
+    glm_translate_make(out_transform, pos);
+    glm_quat_rotate(out_transform, rot, out_transform);
+    glm_scale(out_transform, sca);
+}
 
 // Actors.
 phys_obj::Actor_kinematic::Actor_kinematic(JPH::RVec3 position,

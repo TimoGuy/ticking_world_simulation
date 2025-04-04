@@ -10,7 +10,7 @@ namespace world_sim
 class Transform_read_ifc
 {
 public:
-    virtual void calculate_current_transform(mat4& out_transform) = 0;
+    virtual void read_current_transform(mat4& out_transform) = 0;
 };
 
 }  // namespace world_sim

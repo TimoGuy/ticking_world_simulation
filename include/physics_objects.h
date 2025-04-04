@@ -18,31 +18,37 @@ namespace phys_obj
 // References.
 void set_references(void* physics_system, void* body_interface);
 
-
-
 // Physics system deposits transforms here and renderer withdraws.
 using rvec3 = JPH::Real[3];
+struct Transform_decomposed
+{
+    rvec3  position;
+    versor rotation;
+    vec3   scale;
+};
+
+class Query_physics_transform_ifc
+{
+public:
+    virtual Transform_decomposed query_physics_transform() const = 0;
+};
 
 class Transform_holder : public world_sim::Transform_read_ifc
 {
 public:
-    struct Transform_decomposed
-    {
-        rvec3  position;
-        versor rotation;
-        vec3   scale;
-    };
-
-    Transform_holder(bool interpolate, Transform_decomposed&& initial_transform);
+    Transform_holder(bool interpolate,
+                     const Query_physics_transform_ifc& physics_transform_ref);
 
     inline void set_interpolate(bool interpolate) { m_interpolate_transform = interpolate; }
 
-    void deposit_physics_transform(Transform_decomposed&& transform);
-    void calculate_current_transform(mat4& out_transform) override;
+    void update_physics_transform();
+    void read_current_transform(mat4& out_transform) override;
 
     inline static void increment_buffer_offset() { m_buffer_offset++; };
 
 private:
+    const Query_physics_transform_ifc& m_physics_transform_ref;
+
     std::atomic_bool m_interpolate_transform;
 
     inline static std::atomic_size_t m_buffer_offset{ 0 };
@@ -146,7 +152,7 @@ struct Shape_w_transform
     JPH::Quat local_rotation{ JPH::Quat::sIdentity() };
 };
 
-class Actor_kinematic
+class Actor_kinematic : public Query_physics_transform_ifc
 {
 public:
     Actor_kinematic(JPH::RVec3 position,
@@ -168,6 +174,8 @@ public:
     void set_transform(JPH::RVec3Arg position, JPH::QuatArg rotation);
     void move_kinematic(JPH::RVec3Arg position, JPH::QuatArg rotation);
 
+    Transform_decomposed query_physics_transform() const override;
+
 private:
     Shape_const_reference m_shape;
     JPH::BodyID m_body_id;
@@ -183,7 +191,7 @@ enum Actor_char_ctrller_type_e : uint32_t
 
 // @NOTE: A cylinder shape character controller with collide-and-slide functionality
 //   and moving platform, stair climbing features.
-class Actor_character_controller
+class Actor_character_controller : public Query_physics_transform_ifc
 {
 public:
     Actor_character_controller(JPH::RVec3 position,
@@ -202,6 +210,8 @@ public:
 
     void set_position(JPH::RVec3Arg position);
     void move(JPH::Vec3Arg velocity);
+
+    Transform_decomposed query_physics_transform() const override;
 
 private:
     Actor_char_ctrller_type_e m_type;
