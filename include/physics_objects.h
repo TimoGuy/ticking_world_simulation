@@ -42,7 +42,7 @@ public:
     inline void set_interpolate(bool interpolate) { m_interpolate_transform = interpolate; }
 
     void update_physics_transform();
-    void read_current_transform(mat4& out_transform) override;
+    void read_current_transform(mat4& out_transform, float_t t) override;
 
     inline static void increment_buffer_offset() { m_buffer_offset++; };
 
@@ -170,7 +170,7 @@ public:
     ~Actor_kinematic();
 
     void get_position_and_rotation(JPH::RVec3& out_position,
-                                   JPH::Quat& out_rotation);
+                                   JPH::Quat& out_rotation) const;
     void set_transform(JPH::RVec3Arg position, JPH::QuatArg rotation);
     void move_kinematic(JPH::RVec3Arg position, JPH::QuatArg rotation);
 

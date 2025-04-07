@@ -57,7 +57,7 @@ void phys_obj::Transform_holder::update_physics_transform()
     glm_vec3_copy(transform.scale, current_transform.scale);
 }
 
-void phys_obj::Transform_holder::read_current_transform(mat4& out_transform)
+void phys_obj::Transform_holder::read_current_transform(mat4& out_transform, float_t t)
 {
     // @TODO: In the future with world chunks and camera tricks for rendering large worlds,
     //   convert the true transforms into the camera based transform here!
@@ -71,8 +71,6 @@ void phys_obj::Transform_holder::read_current_transform(mat4& out_transform)
 
     if (m_interpolate_transform)
     {
-        float_t t{ 0.5f };
-
         auto& transform_a{
             m_transform_triple_buffer[(buffer_offset_copy + k_read_a_offset) % k_num_buffers] };
         auto& transform_b{
@@ -176,7 +174,7 @@ phys_obj::Actor_kinematic::~Actor_kinematic()
 }
 
 void phys_obj::Actor_kinematic::get_position_and_rotation(JPH::RVec3& out_position,
-                                                          JPH::Quat& out_rotation)
+                                                          JPH::Quat& out_rotation) const
 {
     s_body_interface_ptr->GetPositionAndRotation(m_body_id,
                                                  out_position,
@@ -197,6 +195,19 @@ void phys_obj::Actor_kinematic::move_kinematic(JPH::RVec3Arg position, JPH::Quat
                                         position,
                                         rotation,
                                         k_world_sim_delta_time);
+}
+
+phys_obj::Transform_decomposed phys_obj::Actor_kinematic::query_physics_transform() const
+{
+    JPH::RVec3 position;
+    JPH::Quat rotation;
+    get_position_and_rotation(position, rotation);
+
+    return {
+        .position{ position.GetX(), position.GetY(), position.GetZ() },
+        .rotation{ rotation.GetX(), rotation.GetY(), rotation.GetZ(), rotation.GetW() },
+        .scale{ 1.0f, 1.0f, 1.0f },
+    };
 }
 
 phys_obj::Actor_character_controller::Actor_character_controller(
@@ -252,6 +263,20 @@ void phys_obj::Actor_character_controller::set_position(JPH::RVec3Arg position)
 void phys_obj::Actor_character_controller::move(JPH::Vec3Arg velocity)
 {
     m_character_controller->SetLinearVelocity(velocity);
+}
+
+phys_obj::Transform_decomposed phys_obj::Actor_character_controller::query_physics_transform() const
+{
+    // @NOTE: I thought that `GetPosition` would be quicker/lighter than
+    //   `GetCenterOfMassPosition`, but getting the position negates the center
+    //   of mass, thus causing an extra subtract operation.  -Thea 2023/09/28
+    JPH::RVec3 position{ m_character_controller->GetCenterOfMassPosition() };
+
+    return {
+        .position{ position.GetX(), position.GetY(), position.GetZ() },
+        .rotation{ 0.0f, 0.0f, 0.0f, 1.0f },
+        .scale{ 1.0f, 1.0f, 1.0f },
+    };
 }
 
 
