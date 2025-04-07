@@ -7,8 +7,10 @@
 #include "world_simulation_settings.h"
 
 
-World_simulation::World_simulation(uint32_t num_threads)
-    : m_s1_create_jolt_physics_world(
+World_simulation::World_simulation(std::atomic_size_t& num_job_sources_setup_incomplete,
+                                   uint32_t num_threads)
+    : m_num_job_sources_setup_incomplete(num_job_sources_setup_incomplete)
+    , m_s1_create_jolt_physics_world(
         std::make_unique<S1_create_jolt_physics_world>(*this, num_threads))
     , m_j3_remove_pending_objs_job(
         std::make_unique<J3_remove_pending_objs_job>(*this))
@@ -141,8 +143,28 @@ Job_source::Job_next_jobs_return_data World_simulation::fetch_next_jobs_callback
     {
         case Job_source_state::SETUP_PHYSICS_WORLD:
             return_data.jobs.emplace_back(m_s1_create_jolt_physics_world.get());
-            m_current_state = Job_source_state::WAIT_UNTIL_TIMEOUT;
+            m_current_state = Job_source_state::WAIT_FOR_GLOBAL_SETUP_COMPLETION;
             break;
+
+        case Job_source_state::WAIT_FOR_GLOBAL_SETUP_COMPLETION:
+        {
+            // Mark setup as complete here by decrementing global counter.
+            // When this counter reaches 0, then that means that all the job sources are
+            // finished with their individual setups.
+            // @INCOMPLETE: Create a better system.
+            static std::atomic_bool s_mark_executed{ false };
+            bool executed_expect{ false };
+            if (s_mark_executed.compare_exchange_strong(executed_expect, true))
+            {
+                m_num_job_sources_setup_incomplete--;
+            }
+
+            if (m_num_job_sources_setup_incomplete == 0)
+            {
+                m_current_state = Job_source_state::WAIT_UNTIL_TIMEOUT;
+            }
+            break;
+        }
 
         case Job_source_state::WAIT_UNTIL_TIMEOUT:
             //if ()  @TODO: add stop doing stuff condition here.

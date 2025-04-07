@@ -15,7 +15,8 @@ class World_simulation : public Job_source, public simulating::Edit_behavior_gro
 public:
     using Behavior_group = std::vector<std::unique_ptr<simulating::Behavior_ifc>>;
 
-    World_simulation(uint32_t num_threads);
+    World_simulation(std::atomic_size_t& num_job_sources_setup_incomplete,
+                     uint32_t num_threads);
 
     void add_sim_entity_to_world(std::unique_ptr<simulating::Entity_ifc>&& entity);
     void remove_entity_from_world(size_t entity_idx);
@@ -24,6 +25,8 @@ public:
     void remove_behavior_group(behavior_group_key_t group_key) override;
 
 private:
+
+    std::atomic_size_t& m_num_job_sources_setup_incomplete;
 
     // Job cycle:
     // - Setup.
@@ -113,6 +116,7 @@ private:
     {
         // Setup.
         SETUP_PHYSICS_WORLD = 0,
+        WAIT_FOR_GLOBAL_SETUP_COMPLETION,
 
         // Main cycle.
         WAIT_UNTIL_TIMEOUT,
