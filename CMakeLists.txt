@@ -52,7 +52,7 @@ target_include_directories(${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
-        # ${CMAKE_CURRENT_SOURCE_DIR}/third_party/jolt_physics  @NOTE: Remove from include dirs so that can be externally accessed.
+        ${CMAKE_CURRENT_SOURCE_DIR}/third_party/JoltPhysics
         ${cglm_INCLUDE_DIR}
         ${input_handling_INCLUDE_DIR}
         ${multithreaded_job_system_INCLUDE_DIR}
