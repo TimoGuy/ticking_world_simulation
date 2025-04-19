@@ -125,6 +125,7 @@ int32_t World_simulation::S1_create_jolt_physics_world::execute()
 // Physics system.
 bool World_simulation::update_physics_system()
 {
+    // @THOUGHTS: Perhaps the reason why there's an error here is bc the move constructor is making copies of the physics objects???
     JPH::EPhysicsUpdateError error =
         m_physics_system->Update(k_world_sim_delta_time,
                                  1,

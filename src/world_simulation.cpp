@@ -77,7 +77,13 @@ int32_t World_simulation::J2_execute_simulation_tick_job::execute()
     }
 
     // Tick physics system.
+    // @TODO: @NOCHECKIN: For some reason with this lock, the update function works? Is this an issue with the thread system's work??? Idk.
+    static std::mutex asdfasdf;
+    std::lock_guard<std::mutex> lock{ asdfasdf };
     m_world_sim.update_physics_system();
+
+    // Propagate new simulated positions to transform holders.
+    assert(false);  // @TODO.
 
     return 0;
 }
