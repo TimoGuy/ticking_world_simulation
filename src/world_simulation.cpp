@@ -70,15 +70,14 @@ void World_simulation::remove_behavior_group(behavior_group_key_t group_key)
 // Jobs.
 int32_t World_simulation::J2_execute_simulation_tick_job::execute()
 {
-    // Execute all behaviors in order of the group.
-    /*m_world_sim.m_behavior_pool_mutex.lock();
-    auto& behavior_exec_grp{ m_world_sim.m_behavior_pool.begin() + m_entity_idx };
-    m_world_sim.m_behavior_pool_mutex.unlock();*/
-
+    // Execute all behavior groups.
     for (auto& behavior : *m_group_ptr)
     {
         behavior->on_update();
     }
+
+    // Tick physics system.
+    m_world_sim.m_physics_system->Update();
 
     return 0;
 }
