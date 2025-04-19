@@ -16,6 +16,7 @@
 #include "jolt_phys_impl__obj_vs_broad_phase_filter.h"
 #include "jolt_phys_impl__custom_listeners.h"
 #include "physics_objects.h"
+#include "world_simulation_settings.h"
 
 
 namespace
@@ -119,4 +120,24 @@ int32_t World_simulation::S1_create_jolt_physics_world::execute()
     phys_obj::set_references(phys_sys.get(), &phys_sys->GetBodyInterface());
 
     return 0;
+}
+
+// Physics system.
+bool World_simulation::update_physics_system()
+{
+    JPH::EPhysicsUpdateError error =
+        m_physics_system->Update(k_world_sim_delta_time,
+                                 1,
+                                 s_jolt_temp_allocator.get(),
+                                 s_using_job_system_ptr);
+
+    if (error != JPH::EPhysicsUpdateError::None)
+    {
+        // Error occurred during physics update.
+        assert(false);
+        return false;
+    }
+
+    // Physics update completed successfully.
+    return true;
 }

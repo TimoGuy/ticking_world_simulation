@@ -150,4 +150,6 @@ private:
 
     // Physics system.
     std::unique_ptr<JPH::PhysicsSystem> m_physics_system;
+
+    bool update_physics_system();
 };

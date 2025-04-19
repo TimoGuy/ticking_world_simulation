@@ -77,7 +77,7 @@ int32_t World_simulation::J2_execute_simulation_tick_job::execute()
     }
 
     // Tick physics system.
-    m_world_sim.m_physics_system->Update();
+    m_world_sim.update_physics_system();
 
     return 0;
 }
