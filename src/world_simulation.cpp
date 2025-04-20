@@ -78,8 +78,16 @@ int32_t World_simulation::J2_execute_simulation_tick_job::execute()
 
     // Tick physics system.
     // @TODO: @NOCHECKIN: For some reason with this lock, the update function works? Is this an issue with the thread system's work??? Idk.
-    static std::mutex asdfasdf;
-    std::lock_guard<std::mutex> lock{ asdfasdf };
+    static std::mutex s_force_visibility_mutex;
+    std::lock_guard<std::mutex> lock{ s_force_visibility_mutex };
+
+    // @NOTE: @FAILED: Tried doing a simple wait to see if that would be enough
+    //   time for visibility to propagate, however, it needs to be the lock or
+    //   else it does not work.  -Thea 2025/04/19
+#if 0
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+#endif  // 0
+
     m_world_sim.update_physics_system();
 
     // Propagate new simulated positions to transform holders.
