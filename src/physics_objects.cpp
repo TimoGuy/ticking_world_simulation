@@ -5,12 +5,15 @@
 #include "jolt_phys_impl__layers.h"
 #include "world_simulation_settings.h"
 
+#include <thread>
+
 
 namespace phys_obj
 {
 
 static JPH::PhysicsSystem* s_physics_system{ nullptr };
 static JPH::BodyInterface* s_body_interface_ptr{ nullptr };
+static JPH::JobSystem* s_job_system_ptr{ nullptr };
 
 Shape_const_reference create_shape(Shape_type shape_type,
                                    Shape_params_ptr shape_param);
@@ -19,10 +22,11 @@ Shape_const_reference create_shape(Shape_type shape_type,
 
 
 // References.
-void phys_obj::set_references(void* physics_system, void* body_interface)
+void phys_obj::set_references(void* physics_system, void* body_interface, void* job_system)
 {
     s_physics_system = reinterpret_cast<JPH::PhysicsSystem*>(physics_system);
     s_body_interface_ptr = reinterpret_cast<JPH::BodyInterface*>(body_interface);
+    s_job_system_ptr = reinterpret_cast<JPH::JobSystem*>(job_system);
 }
 
 // Transform_holder.
@@ -150,14 +154,20 @@ phys_obj::Actor_kinematic::Actor_kinematic(JPH::RVec3 position,
 
     // Create kinematic body.
     assert(s_body_interface_ptr != nullptr);
-    m_body_id =
-        s_body_interface_ptr->CreateAndAddBody(
-            JPH::BodyCreationSettings(m_shape,
-                                      position,
-                                      rotation,
-                                      JPH::EMotionType::Kinematic,
-                                      Layers::MOVING),
-            JPH::EActivation::Activate);
+    assert(s_job_system_ptr != nullptr);
+    JPH::JobHandle handle =
+        s_job_system_ptr->CreateJob("CreateAndAddBody", JPH::ColorArg::sGreen, [&]() {
+            m_body_id =
+                s_body_interface_ptr->CreateAndAddBody(
+                    JPH::BodyCreationSettings(m_shape,
+                                            position,
+                                            rotation,
+                                            JPH::EMotionType::Kinematic,
+                                            Layers::MOVING),
+                    JPH::EActivation::Activate);
+        });
+    while (!handle.IsDone())
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
 }
 
 phys_obj::Actor_kinematic::~Actor_kinematic()

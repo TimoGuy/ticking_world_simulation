@@ -16,7 +16,7 @@ namespace phys_obj
 {
 
 // References.
-void set_references(void* physics_system, void* body_interface);
+void set_references(void* physics_system, void* body_interface, void* job_system);
 
 // Physics system deposits transforms here and renderer withdraws.
 using rvec3 = JPH::Real[3];

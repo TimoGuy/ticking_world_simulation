@@ -117,7 +117,7 @@ int32_t World_simulation::S1_create_jolt_physics_world::execute()
 
     phys_sys->OptimizeBroadPhase();
 
-    phys_obj::set_references(phys_sys.get(), &phys_sys->GetBodyInterface());
+    phys_obj::set_references(phys_sys.get(), &phys_sys->GetBodyInterface(), s_using_job_system_ptr);
 
     return 0;
 }

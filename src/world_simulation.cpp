@@ -78,8 +78,8 @@ int32_t World_simulation::J2_execute_simulation_tick_job::execute()
 
     // Tick physics system.
     // @TODO: @NOCHECKIN: For some reason with this lock, the update function works? Is this an issue with the thread system's work??? Idk.
-    static std::mutex s_force_visibility_mutex;
-    std::lock_guard<std::mutex> lock{ s_force_visibility_mutex };
+    //static std::mutex s_force_visibility_mutex;
+    //std::lock_guard<std::mutex> lock{ s_force_visibility_mutex };
 
     // @NOTE: @FAILED: Tried doing a simple wait to see if that would be enough
     //   time for visibility to propagate, however, it needs to be the lock or
